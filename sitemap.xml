@@ -47,7 +47,7 @@
   </url>
   
   <url>
-    <loc>http://batizhao.github.io/2018/03/12/setup-kubectl-config/</loc>
+    <loc>http://batizhao.github.io/2018/03/02/debug-in-k8s/</loc>
     
     <lastmod>2024-09-11</lastmod>
     
@@ -65,7 +65,7 @@
   </url>
   
   <url>
-    <loc>http://batizhao.github.io/2018/03/02/debug-in-k8s/</loc>
+    <loc>http://batizhao.github.io/2018/03/12/setup-kubectl-config/</loc>
     
     <lastmod>2024-09-11</lastmod>
     
@@ -74,7 +74,7 @@
   </url>
   
   <url>
-    <loc>http://batizhao.github.io/2018/08/10/deploy-fabric-on-kubernetes/</loc>
+    <loc>http://batizhao.github.io/2018/09/13/deploy-fabric-on-kubernetes-three/</loc>
     
     <lastmod>2024-09-11</lastmod>
     
@@ -92,7 +92,7 @@
   </url>
   
   <url>
-    <loc>http://batizhao.github.io/2018/09/13/deploy-fabric-on-kubernetes-three/</loc>
+    <loc>http://batizhao.github.io/2018/08/10/deploy-fabric-on-kubernetes/</loc>
     
     <lastmod>2024-09-11</lastmod>
     
@@ -119,15 +119,6 @@
   </url>
   
   <url>
-    <loc>http://batizhao.github.io/2016/12/01/docker-four-docker-compose/</loc>
-    
-    <lastmod>2024-09-11</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
     <loc>http://batizhao.github.io/2016/11/24/docker-three-command/</loc>
     
     <lastmod>2024-09-11</lastmod>
@@ -137,7 +128,16 @@
   </url>
   
   <url>
-    <loc>http://batizhao.github.io/2016/12/02/docker-five-swarm-mode/</loc>
+    <loc>http://batizhao.github.io/2016/12/01/docker-four-docker-compose/</loc>
+    
+    <lastmod>2024-09-11</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://batizhao.github.io/2016/12/09/docker-six-docker-compose-cluster/</loc>
     
     <lastmod>2024-09-11</lastmod>
     
@@ -164,16 +164,7 @@
   </url>
   
   <url>
-    <loc>http://batizhao.github.io/2016/12/09/docker-six-docker-compose-cluster/</loc>
-    
-    <lastmod>2024-09-11</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>http://batizhao.github.io/2017/12/15/install-jenkins-to-k8s/</loc>
+    <loc>http://batizhao.github.io/2016/12/02/docker-five-swarm-mode/</loc>
     
     <lastmod>2024-09-11</lastmod>
     
@@ -191,7 +182,7 @@
   </url>
   
   <url>
-    <loc>http://batizhao.github.io/2013/05/29/installing-solr-on-tomcat/</loc>
+    <loc>http://batizhao.github.io/2017/12/15/install-jenkins-to-k8s/</loc>
     
     <lastmod>2024-09-11</lastmod>
     
@@ -209,6 +200,15 @@
   </url>
   
   <url>
+    <loc>http://batizhao.github.io/2013/05/29/installing-solr-on-tomcat/</loc>
+    
+    <lastmod>2024-09-11</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
     <loc>http://batizhao.github.io/2013/11/06/jdk-7---install_parse_failed_no_certificates/</loc>
     
     <lastmod>2024-09-11</lastmod>
@@ -218,7 +218,7 @@
   </url>
   
   <url>
-    <loc>http://batizhao.github.io/2014/04/11/learning-edx-one/</loc>
+    <loc>http://batizhao.github.io/2013/10/31/how-do-i-run-idea-intellij-on-mac-os-x-with-jdk-7/</loc>
     
     <lastmod>2024-09-11</lastmod>
     
@@ -245,7 +245,7 @@
   </url>
   
   <url>
-    <loc>http://batizhao.github.io/2014/04/18/building-a-course/</loc>
+    <loc>http://batizhao.github.io/2014/04/11/learning-edx-one/</loc>
     
     <lastmod>2024-09-11</lastmod>
     
@@ -254,7 +254,7 @@
   </url>
   
   <url>
-    <loc>http://batizhao.github.io/2013/10/31/how-do-i-run-idea-intellij-on-mac-os-x-with-jdk-7/</loc>
+    <loc>http://batizhao.github.io/2014/04/18/building-a-course/</loc>
     
     <lastmod>2024-09-11</lastmod>
     
@@ -272,15 +272,6 @@
   </url>
   
   <url>
-    <loc>http://batizhao.github.io/2012/07/19/setting-cas-assertion/</loc>
-    
-    <lastmod>2024-09-11</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
     <loc>http://batizhao.github.io/2012/07/16/install-dns-server-on-centos6/</loc>
     
     <lastmod>2024-09-11</lastmod>
@@ -290,16 +281,7 @@
   </url>
   
   <url>
-    <loc>http://batizhao.github.io/2012/09/17/install-vsftpd-on-centos6/</loc>
-    
-    <lastmod>2024-09-11</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>http://batizhao.github.io/2012/09/18/installing-activemq-as-a-service-on-centos6/</loc>
+    <loc>http://batizhao.github.io/2012/08/22/maven-package/</loc>
     
     <lastmod>2024-09-11</lastmod>
     
@@ -317,7 +299,7 @@
   </url>
   
   <url>
-    <loc>http://batizhao.github.io/2012/09/27/using-simple-spring-memcached-two/</loc>
+    <loc>http://batizhao.github.io/2012/09/18/installing-activemq-as-a-service-on-centos6/</loc>
     
     <lastmod>2024-09-11</lastmod>
     
@@ -326,7 +308,7 @@
   </url>
   
   <url>
-    <loc>http://batizhao.github.io/2012/09/28/using-simple-spring-memcached-three/</loc>
+    <loc>http://batizhao.github.io/2012/09/17/install-vsftpd-on-centos6/</loc>
     
     <lastmod>2024-09-11</lastmod>
     
@@ -344,6 +326,24 @@
   </url>
   
   <url>
+    <loc>http://batizhao.github.io/2012/09/27/using-simple-spring-memcached-two/</loc>
+    
+    <lastmod>2024-09-11</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://batizhao.github.io/2012/07/19/setting-cas-assertion/</loc>
+    
+    <lastmod>2024-09-11</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
     <loc>http://batizhao.github.io/2012/09/27/using-simple-spring-memcached-one/</loc>
     
     <lastmod>2024-09-11</lastmod>
@@ -353,7 +353,7 @@
   </url>
   
   <url>
-    <loc>http://batizhao.github.io/2012/08/22/maven-package/</loc>
+    <loc>http://batizhao.github.io/2012/09/28/using-simple-spring-memcached-three/</loc>
     
     <lastmod>2024-09-11</lastmod>
     
@@ -389,7 +389,25 @@
   </url>
   
   <url>
+    <loc>http://batizhao.github.io/2012/05/02/step-by-step-one-openidm/</loc>
+    
+    <lastmod>2024-09-11</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
     <loc>http://batizhao.github.io/2012/05/03/step-by-step-two-openidm/</loc>
+    
+    <lastmod>2024-09-11</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://batizhao.github.io/2012/05/08/identity-management/</loc>
     
     <lastmod>2024-09-11</lastmod>
     
@@ -426,24 +444,6 @@
   
   <url>
     <loc>http://batizhao.github.io/2012/07/13/install-opendj-on-centos6-with-gui/</loc>
-    
-    <lastmod>2024-09-11</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>http://batizhao.github.io/2012/05/02/step-by-step-one-openidm/</loc>
-    
-    <lastmod>2024-09-11</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>http://batizhao.github.io/2012/05/08/identity-management/</loc>
     
     <lastmod>2024-09-11</lastmod>
     
@@ -497,15 +497,6 @@
   </url>
   
   <url>
-    <loc>http://batizhao.github.io/2012/03/29/install-java-on-rhel6/</loc>
-    
-    <lastmod>2024-09-11</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
     <loc>http://batizhao.github.io/2012/03/29/install-apache2/</loc>
     
     <lastmod>2024-09-11</lastmod>
@@ -515,7 +506,7 @@
   </url>
   
   <url>
-    <loc>http://batizhao.github.io/2012/04/05/install-openam-on-rhel6/</loc>
+    <loc>http://batizhao.github.io/2012/03/29/install-java-on-rhel6/</loc>
     
     <lastmod>2024-09-11</lastmod>
     
@@ -533,6 +524,15 @@
   </url>
   
   <url>
+    <loc>http://batizhao.github.io/2012/04/05/install-openam-on-rhel6/</loc>
+    
+    <lastmod>2024-09-11</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
     <loc>http://batizhao.github.io/2012/04/06/installing-the-apache-tomcat-policy-agent/</loc>
     
     <lastmod>2024-09-11</lastmod>
@@ -542,7 +542,7 @@
   </url>
   
   <url>
-    <loc>http://batizhao.github.io/2012/04/16/openam-integrate-with-spring-security-3/</loc>
+    <loc>http://batizhao.github.io/2012/04/12/using-openam-develop-dlient-applications/</loc>
     
     <lastmod>2024-09-11</lastmod>
     
@@ -551,7 +551,7 @@
   </url>
   
   <url>
-    <loc>http://batizhao.github.io/2012/04/12/using-openam-develop-dlient-applications/</loc>
+    <loc>http://batizhao.github.io/2012/04/16/openam-integrate-with-spring-security-3/</loc>
     
     <lastmod>2024-09-11</lastmod>
     
@@ -606,13 +606,6 @@
   </url>
   
   <url>
-    <loc>http://batizhao.github.io/tags/java/</loc>
-    <lastmod>2024-09-12</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
     <loc>http://batizhao.github.io/tags/apache/</loc>
     <lastmod>2024-09-12</lastmod>
     <changefreq>weekly</changefreq>
@@ -621,6 +614,13 @@
   
   <url>
     <loc>http://batizhao.github.io/tags/sso/</loc>
+    <lastmod>2024-09-12</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>http://batizhao.github.io/tags/java/</loc>
     <lastmod>2024-09-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
@@ -662,7 +662,14 @@
   </url>
   
   <url>
-    <loc>http://batizhao.github.io/tags/ftp/</loc>
+    <loc>http://batizhao.github.io/tags/maven/</loc>
+    <lastmod>2024-09-12</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>http://batizhao.github.io/tags/memcached/</loc>
     <lastmod>2024-09-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
@@ -683,21 +690,7 @@
   </url>
   
   <url>
-    <loc>http://batizhao.github.io/tags/memcached/</loc>
-    <lastmod>2024-09-12</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
-    <loc>http://batizhao.github.io/tags/solr/</loc>
-    <lastmod>2024-09-12</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
-    <loc>http://batizhao.github.io/tags/jetty/</loc>
+    <loc>http://batizhao.github.io/tags/ftp/</loc>
     <lastmod>2024-09-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
@@ -718,6 +711,20 @@
   </url>
   
   <url>
+    <loc>http://batizhao.github.io/tags/solr/</loc>
+    <lastmod>2024-09-12</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>http://batizhao.github.io/tags/jetty/</loc>
+    <lastmod>2024-09-12</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
     <loc>http://batizhao.github.io/tags/jdk7/</loc>
     <lastmod>2024-09-12</lastmod>
     <changefreq>weekly</changefreq>
@@ -732,7 +739,7 @@
   </url>
   
   <url>
-    <loc>http://batizhao.github.io/tags/maven/</loc>
+    <loc>http://batizhao.github.io/tags/mac/</loc>
     <lastmod>2024-09-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
@@ -760,7 +767,7 @@
   </url>
   
   <url>
-    <loc>http://batizhao.github.io/tags/mac/</loc>
+    <loc>http://batizhao.github.io/tags/haproxy/</loc>
     <lastmod>2024-09-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
@@ -809,20 +816,6 @@
   </url>
   
   <url>
-    <loc>http://batizhao.github.io/tags/haproxy/</loc>
-    <lastmod>2024-09-12</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
-    <loc>http://batizhao.github.io/tags/jenkins/</loc>
-    <lastmod>2024-09-12</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
     <loc>http://batizhao.github.io/tags/ingress/</loc>
     <lastmod>2024-09-12</lastmod>
     <changefreq>weekly</changefreq>
@@ -838,6 +831,13 @@
   
   <url>
     <loc>http://batizhao.github.io/tags/heapster/</loc>
+    <lastmod>2024-09-12</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>http://batizhao.github.io/tags/jenkins/</loc>
     <lastmod>2024-09-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
@@ -888,7 +888,7 @@
   </url>
   
   <url>
-    <loc>http://batizhao.github.io/categories/cas/</loc>
+    <loc>http://batizhao.github.io/categories/maven/</loc>
     <lastmod>2024-09-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
@@ -902,7 +902,7 @@
   </url>
   
   <url>
-    <loc>http://batizhao.github.io/categories/tomcat/</loc>
+    <loc>http://batizhao.github.io/categories/cas/</loc>
     <lastmod>2024-09-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
@@ -910,6 +910,13 @@
   
   <url>
     <loc>http://batizhao.github.io/categories/solr/</loc>
+    <lastmod>2024-09-12</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>http://batizhao.github.io/categories/tomcat/</loc>
     <lastmod>2024-09-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
@@ -924,13 +931,6 @@
   
   <url>
     <loc>http://batizhao.github.io/categories/docker/</loc>
-    <lastmod>2024-09-12</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
-    <loc>http://batizhao.github.io/categories/maven/</loc>
     <lastmod>2024-09-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
