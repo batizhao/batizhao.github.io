@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 7.3.0">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha256-XOqroi11tY4EFQMR9ZYwZWKj5ZXiftSx36RRuC3anlA=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"batizhao.github.io","root":"/","images":"/images","scheme":"Pisces","darkmode":false,"version":"8.20.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"post","padding":18,"offset":12},"hljswrap":true,"copycode":{"enable":false,"style":null},"fold":{"enable":false,"height":500},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":true,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"},"path":"/search.xml","localsearch":{"enable":true,"top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="安装 Gluster FS1234567891011121314151617181920# 先安装 gluster 源$ yum install centos-release-gluster -y# 安装 glusterfs 组件$ yum install -y glusterfs glusterfs-server glusterfs-fuse glusterfs-rdma glusterfs-g">
+<meta property="og:type" content="article">
+<meta property="og:title" content="使用 Gluster FS 做 Kubernetes 持久化存储">
+<meta property="og:url" content="http://batizhao.github.io/2018/02/08/installing-glusterfs/index.html">
+<meta property="og:site_name" content="Gunner">
+<meta property="og:description" content="安装 Gluster FS1234567891011121314151617181920# 先安装 gluster 源$ yum install centos-release-gluster -y# 安装 glusterfs 组件$ yum install -y glusterfs glusterfs-server glusterfs-fuse glusterfs-rdma glusterfs-g">
+<meta property="og:locale">
+<meta property="article:published_time" content="2018-02-08T06:28:41.000Z">
+<meta property="article:modified_time" content="2024-09-11T08:18:28.526Z">
+<meta property="article:author" content="巴蒂">
+<meta property="article:tag" content="linux">
+<meta property="article:tag" content="kubernetes">
+<meta property="article:tag" content="glusterfs">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="http://batizhao.github.io/2018/02/08/installing-glusterfs/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-Hans","comments":true,"permalink":"http://batizhao.github.io/2018/02/08/installing-glusterfs/","path":"2018/02/08/installing-glusterfs/","title":"使用 Gluster FS 做 Kubernetes 持久化存储"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>使用 Gluster FS 做 Kubernetes 持久化存储 | Gunner</title>
+  
+
+  <script src="/js/third-party/analytics/baidu-analytics.js"></script>
+  <script async src="https://hm.baidu.com/hm.js?4e3ffdab4387b8ef0d7c7c587e39xxxx"></script>
+
+
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+<link rel="alternate" href="/atom.xml" title="Gunner" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">Gunner</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="Search" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>Search
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="Searching..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%89%E8%A3%85-Gluster-FS"><span class="nav-number">1.</span> <span class="nav-text">安装 Gluster FS</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE-Gluster-FS"><span class="nav-number">2.</span> <span class="nav-text">配置 Gluster FS</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE-Gluster-FS-Volume"><span class="nav-number">3.</span> <span class="nav-text">配置 Gluster FS Volume</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%B0%83%E4%BC%98-Gluster-FS"><span class="nav-number">4.</span> <span class="nav-text">调优 Gluster FS</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9C%A8-Kubernetes-%E4%BD%BF%E7%94%A8-Gluster-FS"><span class="nav-number">5.</span> <span class="nav-text">在 Kubernetes 使用 Gluster FS</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%89%E8%A3%85-Gluster-FS-%E5%AE%A2%E6%88%B7%E7%AB%AF"><span class="nav-number">5.1.</span> <span class="nav-text">安装 Gluster FS 客户端</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA-endpoints"><span class="nav-number">5.2.</span> <span class="nav-text">创建 endpoints</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA-PersistentVolume"><span class="nav-number">5.3.</span> <span class="nav-text">创建 PersistentVolume</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA-PersistentVolumeClaim"><span class="nav-number">5.4.</span> <span class="nav-text">创建 PersistentVolumeClaim</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA%E6%B5%8B%E8%AF%95-nginx-%E6%8C%82%E8%BD%BD-volume"><span class="nav-number">5.5.</span> <span class="nav-text">创建测试 nginx 挂载 volume</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%89%E8%A3%85-Heketi"><span class="nav-number">6.</span> <span class="nav-text">安装 Heketi</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83"><span class="nav-number">7.</span> <span class="nav-text">参考</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">巴蒂</p>
+  <div class="site-description" itemprop="description">心中总有个梦想，想英雄一样地走过这世界。</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">59</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">12</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">40</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/batizhao" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;batizhao" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:zhaobati@gmail.com" title="E-Mail → mailto:zhaobati@gmail.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="http://batizhao.github.io/2018/02/08/installing-glusterfs/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="巴蒂">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Gunner">
+      <meta itemprop="description" content="心中总有个梦想，想英雄一样地走过这世界。">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="使用 Gluster FS 做 Kubernetes 持久化存储 | Gunner">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          使用 Gluster FS 做 Kubernetes 持久化存储
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2018-02-08 14:28:41" itemprop="dateCreated datePublished" datetime="2018-02-08T14:28:41+08:00">2018-02-08</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">Edited on</span>
+      <time title="Modified: 2024-09-11 16:18:28" itemprop="dateModified" datetime="2024-09-11T16:18:28+08:00">2024-09-11</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/docker/" itemprop="url" rel="index"><span itemprop="name">docker</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="Views" id="busuanzi_container_page_pv">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">Views: </span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><h2 id="安装-Gluster-FS"><a href="#安装-Gluster-FS" class="headerlink" title="安装 Gluster FS"></a>安装 Gluster FS</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">先安装 gluster 源</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">yum install centos-release-gluster -y</span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">安装 glusterfs 组件</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">yum install -y glusterfs glusterfs-server glusterfs-fuse glusterfs-rdma glusterfs-geo-replication glusterfs-devel</span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">创建 glusterfs 目录</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash"><span class="built_in">mkdir</span> /opt/glusterd</span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">修改 glusterd 目录</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">sed -i <span class="string">&#x27;s/var\/lib/opt/g&#x27;</span> /etc/glusterfs/glusterd.vol</span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">启动 glusterfs</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">systemctl start glusterd.service</span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">设置开机启动</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">systemctl <span class="built_in">enable</span> glusterd.service</span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">查看状态</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">systemctl status glusterd.service</span></span><br></pre></td></tr></table></figure>
+
+<span id="more"></span>
+
+<h2 id="配置-Gluster-FS"><a href="#配置-Gluster-FS" class="headerlink" title="配置 Gluster FS"></a>配置 Gluster FS</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">配置 hosts</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">vi /etc/hosts</span></span><br><span class="line">172.31.21.208   gfs01.isoftone.com </span><br><span class="line">172.31.21.209   gfs02.isoftone.com </span><br><span class="line">172.31.21.210   gfs03.isoftone.com</span><br><span class="line">172.31.21.211   gfs04.isoftone.com</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">开放端口</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">iptables -I INPUT -p tcp --dport 24007 -j ACCEPT</span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">创建存储目录</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash"><span class="built_in">mkdir</span> /opt/gfs_data</span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">添加节点到 集群</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">执行操作的本机不需要probe 本机</span></span><br><span class="line">[root@sz-pg-oam-docker-test-001 ~]#</span><br><span class="line">gluster peer probe gfs02.isoftone.com</span><br><span class="line">gluster peer probe gfs03.isoftone.com</span><br><span class="line">gluster peer probe gfs04.isoftone.com</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">查看集群状态</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">gluster peer status</span></span><br><span class="line">Number of Peers: 3</span><br><span class="line"></span><br><span class="line">Hostname: gfs02.isoftone.com</span><br><span class="line">Uuid: 0697cfd7-4c88-4d29-b907-59894b158df7</span><br><span class="line">State: Peer in Cluster (Connected)</span><br><span class="line"></span><br><span class="line">Hostname: gfs03.isoftone.com</span><br><span class="line">Uuid: 7754d301-00ac-4c28-ac22-4d5f89d2d1d3</span><br><span class="line">State: Peer in Cluster (Connected)</span><br><span class="line"></span><br><span class="line">Hostname: gfs04.isoftone.com</span><br><span class="line">Uuid: 7b33777c-0d3b-45f9-acbd-4f8d09da6431</span><br><span class="line">State: Peer in Cluster (Connected)</span><br></pre></td></tr></table></figure>
+
+<h2 id="配置-Gluster-FS-Volume"><a href="#配置-Gluster-FS-Volume" class="headerlink" title="配置 Gluster FS Volume"></a>配置 Gluster FS Volume</h2><p>GlusterFS中的volume的模式有很多中，包括以下几种：</p>
+<ul>
+<li><strong>分布卷（默认模式）</strong>：即DHT, 也叫 分布卷: 将文件已hash算法随机分布到 一台服务器节点中存储。</li>
+<li><strong>复制模式</strong>：即AFR, 创建volume 时带 replica x 数量: 将文件复制到 replica x 个节点中。</li>
+<li><strong>条带模式</strong>：即Striped, 创建volume 时带 stripe x 数量： 将文件切割成数据块，分别存储到 stripe x 个节点中 ( 类似raid 0 )。</li>
+<li><strong>分布式条带模式</strong>：最少需要4台服务器才能创建。 创建volume 时 stripe 2 server &#x3D; 4 个节点： 是DHT 与 Striped 的组合型。</li>
+<li><strong>分布式复制模式</strong>：最少需要4台服务器才能创建。 创建volume 时 replica 2 server &#x3D; 4 个节点：是DHT 与 AFR 的组合型。</li>
+<li><strong>条带复制卷模式</strong>：最少需要4台服务器才能创建。 创建volume 时 stripe 2 replica 2 server &#x3D; 4 个节点： 是 Striped 与 AFR 的组合型。</li>
+<li><strong>三种模式混合</strong>： 至少需要8台 服务器才能创建。 stripe 2 replica 2 , 每4个节点 组成一个 组。</li>
+</ul>
+<p>这几种模式的示例图参考：<a href="http://www.cnblogs.com/jicki/p/5801712.html">CentOS7安装GlusterFS</a>。</p>
+<p>因为我们只有四台主机，在此我们使用默认的<strong>分布式复制模式</strong>。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">创建分布卷</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">gluster volume create k8s-volume replica 2 transport tcp gfs01.isoftone.com:/opt/gfs_data gfs02.isoftone.com:/opt/gfs_data gfs03.isoftone.com:/opt/gfs_data gfs04.isoftone.com:/opt/gfs_data force</span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">查看volume状态</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">gluster volume info</span></span><br><span class="line">Volume Name: k8s-volume</span><br><span class="line">Type: Distributed-Replicate</span><br><span class="line">Volume ID: f5438a2b-22b3-4608-9a45-ed9fa0028d38</span><br><span class="line">Status: Created</span><br><span class="line">Snapshot Count: 0</span><br><span class="line">Number of Bricks: 2 x 2 = 4</span><br><span class="line">Transport-type: tcp</span><br><span class="line">Bricks:</span><br><span class="line">Brick1: gfs01.isoftone.com:/opt/gfs_data</span><br><span class="line">Brick2: gfs02.isoftone.com:/opt/gfs_data</span><br><span class="line">Brick3: gfs03.isoftone.com:/opt/gfs_data</span><br><span class="line">Brick4: gfs04.isoftone.com:/opt/gfs_data</span><br><span class="line">Options Reconfigured:</span><br><span class="line">transport.address-family: inet</span><br><span class="line">nfs.disable: on</span><br><span class="line">performance.client-io-threads: off</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">启动 k8s-volume 卷</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">gluster volume start k8s-volume</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="调优-Gluster-FS"><a href="#调优-Gluster-FS" class="headerlink" title="调优 Gluster FS"></a>调优 Gluster FS</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">开启 指定 volume 的配额</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">gluster volume quota k8s-volume <span class="built_in">enable</span></span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">限制 指定 volume 的配额</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">gluster volume quota k8s-volume limit-usage / 1TB</span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">设置 cache 大小, 默认32MB</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">gluster volume <span class="built_in">set</span> k8s-volume performance.cache-size 4GB</span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">设置 io 线程, 太大会导致进程崩溃</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">gluster volume <span class="built_in">set</span> k8s-volume performance.io-thread-count 16</span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">设置 网络检测时间, 默认42s</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">gluster volume <span class="built_in">set</span> k8s-volume network.ping-timeout 10</span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">设置 写缓冲区的大小, 默认1M</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">gluster volume <span class="built_in">set</span> k8s-volume performance.write-behind-window-size 1024MB</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="在-Kubernetes-使用-Gluster-FS"><a href="#在-Kubernetes-使用-Gluster-FS" class="headerlink" title="在 Kubernetes 使用 Gluster FS"></a>在 Kubernetes 使用 Gluster FS</h2><h3 id="安装-Gluster-FS-客户端"><a href="#安装-Gluster-FS-客户端" class="headerlink" title="安装 Gluster FS 客户端"></a>安装 Gluster FS 客户端</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">在所有 k8s node 中安装 glusterfs 客户端</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">yum install -y glusterfs glusterfs-fuse</span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">配置 hosts</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">vi /etc/hosts</span></span><br><span class="line">172.31.21.208   gfs01.isoftone.com </span><br><span class="line">172.31.21.209   gfs02.isoftone.com </span><br><span class="line">172.31.21.210   gfs03.isoftone.com</span><br><span class="line">172.31.21.211   gfs04.isoftone.com</span><br></pre></td></tr></table></figure>
+
+<h3 id="创建-endpoints"><a href="#创建-endpoints" class="headerlink" title="创建 endpoints"></a>创建 endpoints</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">curl -O https://raw.githubusercontent.com/batizhao/dockerfile/master/k8s/glusterfs/glusterfs-endpoints.yaml</span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">导入 glusterfs-pod.json</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubectl apply -f glusterfs-endpoints.yaml</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubectl get ep</span></span><br><span class="line">NAME                ENDPOINTS                                                     AGE</span><br><span class="line">glusterfs-cluster   172.31.21.208:1,172.31.21.209:1,172.31.21.210:1 + 1 more...   59m</span><br></pre></td></tr></table></figure>
+
+<h3 id="创建-PersistentVolume"><a href="#创建-PersistentVolume" class="headerlink" title="创建 PersistentVolume"></a>创建 PersistentVolume</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">curl -O https://raw.githubusercontent.com/batizhao/dockerfile/master/k8s/glusterfs/glusterfs-pv.yaml</span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubectl apply -f glusterfs-pv.yaml</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubectl get pv | grep glus</span></span><br><span class="line">glusterfs-pv   8Gi        RWX            Retain           Bound     default/glusterfs-pvc                             55m</span><br></pre></td></tr></table></figure>
+
+<h3 id="创建-PersistentVolumeClaim"><a href="#创建-PersistentVolumeClaim" class="headerlink" title="创建 PersistentVolumeClaim"></a>创建 PersistentVolumeClaim</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">curl -O https://raw.githubusercontent.com/batizhao/dockerfile/master/k8s/glusterfs/glusterfs-pvc.yaml</span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubectl apply -f glusterfs-pvc.yaml</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubectl get pvc | grep glus</span></span><br><span class="line">glusterfs-pvc   Bound     glusterfs-pv   8Gi        RWX                           56m</span><br></pre></td></tr></table></figure>
+
+<h3 id="创建测试-nginx-挂载-volume"><a href="#创建测试-nginx-挂载-volume" class="headerlink" title="创建测试 nginx 挂载 volume"></a>创建测试 nginx 挂载 volume</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">curl -O https://raw.githubusercontent.com/batizhao/dockerfile/master/k8s/glusterfs/nginx-deployment.yaml</span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubectl apply -f nginx-deployment.yaml</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubectl get deploy,pod</span></span><br><span class="line">NAME              DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE</span><br><span class="line">deploy/nginx-dm   2         2         2            2           54m</span><br><span class="line"></span><br><span class="line">NAME                           READY     STATUS    RESTARTS   AGE</span><br><span class="line">po/nginx-dm-5d49ccb7f5-h62dc   1/1       Running   0          54m</span><br><span class="line">po/nginx-dm-5d49ccb7f5-szsfg   1/1       Running   0          54m</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">登陆 k8s node 物理机，使用 <span class="built_in">df</span> 可查看挂载目录</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash"><span class="built_in">df</span> -h | grep glusterfs</span></span><br><span class="line">172.31.21.208:k8s-volume  560G  8.7G  552G    2% /var/lib/kubelet/pods/c403020c-0ca8-11e8-ace7-000c29c217e5/volumes/kubernetes.io~glusterfs/glusterfs-pv</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">查看挂载</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubectl <span class="built_in">exec</span> -it nginx-dm-5d49ccb7f5-h62dc -- <span class="built_in">df</span> -h|grep k8s-volume</span></span><br><span class="line">172.31.21.208:k8s-volume                                                                             560G  8.7G  552G   2% /usr/share/nginx/html</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">创建文件 测试</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubectl <span class="built_in">exec</span> -it nginx-dm-5d49ccb7f5-h62dc -- <span class="built_in">touch</span> /usr/share/nginx/html/index.html</span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubectl <span class="built_in">exec</span> -it nginx-dm-5d49ccb7f5-h62dc -- <span class="built_in">ls</span> -lt /usr/share/nginx/html/index.html</span></span><br><span class="line">-rw-r--r-- 1 root root 0 Feb  8 09:24 /usr/share/nginx/html/index.html</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">验证 glusterfs</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">因为我们使用分布复制卷 replica 2，所以可以看到有 2 个节点中有文件</span></span><br><span class="line">[root@glusterfs-01 gfs_data]# ls</span><br><span class="line">index.html</span><br><span class="line">[root@glusterfs-02 gfs_data]# ls</span><br><span class="line">index.html</span><br><span class="line">[root@glusterfs-03 gfs_data]# ls</span><br><span class="line">[root@glusterfs-04 gfs_data]# ls</span><br></pre></td></tr></table></figure>
+
+<h2 id="安装-Heketi"><a href="#安装-Heketi" class="headerlink" title="安装 Heketi"></a>安装 Heketi</h2><p>GlusterFS 是个开源的分布式文件系统，而 Heketi 在其上提供了 REST 形式的 API，二者协同为 Kubernetes 提供了存储卷的自动供给能力。</p>
+<ul>
+<li>Heketi 服务器：172.31.21.208</li>
+<li>Gluster 服务器：<ul>
+<li>172.31.21.208</li>
+<li>172.31.21.209</li>
+<li>172.31.21.210</li>
+<li>172.31.21.211</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">安装</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">yum -y install epel-release</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">yum -y install heketi heketi-client</span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">管理证书</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">ssh-keygen -f /etc/heketi/heketi_key -t rsa -N <span class="string">&#x27;&#x27;</span></span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash"><span class="built_in">chown</span> heketi:heketi /etc/heketi/heketi_key*</span></span><br></pre></td></tr></table></figure>
+
+<p>制作完成后会在当前目录下生成 heketi_key、heketi_key.pub。接下来，修改 &#x2F;etc&#x2F;heketi&#x2F;heketi.json 中的 keyfile 指向生成的 key。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">将公钥 heketi_key.pub 拷贝到所有 glusterfs 节点上 /etc/heketi/keketi_key.pub</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">ssh-copy-id -i /etc/heketi/heketi_key.pub root@172.31.21.209</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">ssh-copy-id -i /etc/heketi/heketi_key.pub root@172.31.21.210</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">ssh-copy-id -i /etc/heketi/heketi_key.pub root@172.31.21.211</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash"><span class="built_in">cat</span> /etc/heketi/heketi.json</span></span><br><span class="line">&#123;</span><br><span class="line">  &quot;_port_comment&quot;: &quot;Heketi Server Port Number&quot;,</span><br><span class="line">  &quot;port&quot;: &quot;8080&quot;,</span><br><span class="line"></span><br><span class="line">  &quot;_use_auth&quot;: &quot;Enable JWT authorization. Please enable for deployment&quot;,</span><br><span class="line">  &quot;use_auth&quot;: false,</span><br><span class="line"></span><br><span class="line">  &quot;_jwt&quot;: &quot;Private keys for access&quot;,</span><br><span class="line">  &quot;jwt&quot;: &#123;</span><br><span class="line">    &quot;_admin&quot;: &quot;Admin has access to all APIs&quot;,</span><br><span class="line">    &quot;admin&quot;: &#123;</span><br><span class="line">      &quot;key&quot;: &quot;123456&quot;</span><br><span class="line">    &#125;,</span><br><span class="line">    &quot;_user&quot;: &quot;User only has access to /volumes endpoint&quot;,</span><br><span class="line">    &quot;user&quot;: &#123;</span><br><span class="line">      &quot;key&quot;: &quot;123456&quot;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;,</span><br><span class="line"></span><br><span class="line">  &quot;_glusterfs_comment&quot;: &quot;GlusterFS Configuration&quot;,</span><br><span class="line">  &quot;glusterfs&quot;: &#123;</span><br><span class="line">    &quot;_executor_comment&quot;: [</span><br><span class="line">      &quot;Execute plugin. Possible choices: mock, ssh&quot;,</span><br><span class="line">      &quot;mock: This setting is used for testing and development.&quot;,</span><br><span class="line">      &quot;      It will not send commands to any node.&quot;,</span><br><span class="line">      &quot;ssh:  This setting will notify Heketi to ssh to the nodes.&quot;,</span><br><span class="line">      &quot;      It will need the values in sshexec to be configured.&quot;,</span><br><span class="line">      &quot;kubernetes: Communicate with GlusterFS containers over&quot;,</span><br><span class="line">      &quot;            Kubernetes exec api.&quot;</span><br><span class="line">    ],</span><br><span class="line">    &quot;executor&quot;: &quot;ssh&quot;,</span><br><span class="line"></span><br><span class="line">    &quot;_sshexec_comment&quot;: &quot;SSH username and private key file information&quot;,</span><br><span class="line">    &quot;sshexec&quot;: &#123;</span><br><span class="line">      &quot;keyfile&quot;: &quot;/etc/heketi/heketi_key&quot;,</span><br><span class="line">      &quot;user&quot;: &quot;root&quot;,</span><br><span class="line">      &quot;port&quot;: &quot;Optional: ssh port.  Default is 22&quot;,</span><br><span class="line">      &quot;fstab&quot;: &quot;Optional: Specify fstab file on node.  Default is /etc/fstab&quot;</span><br><span class="line">    &#125;,</span><br><span class="line"></span><br><span class="line">    &quot;_db_comment&quot;: &quot;Database file name&quot;,</span><br><span class="line">    &quot;db&quot;: &quot;/var/lib/heketi/heketi.db&quot;,</span><br><span class="line"></span><br><span class="line">    &quot;_loglevel_comment&quot;: [</span><br><span class="line">      &quot;Set log level. Choices are:&quot;,</span><br><span class="line">      &quot;  none, critical, error, warning, info, debug&quot;,</span><br><span class="line">      &quot;Default is warning&quot;</span><br><span class="line">    ],</span><br><span class="line">    &quot;loglevel&quot; : &quot;debug&quot;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">启动</span></span><br><span class="line">systemctl enable heketi &amp;&amp; systemctl restart heketi &amp;&amp; systemctl status heketi</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">测试</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">curl http://localhost:8080/hello</span></span><br><span class="line">Hello from Heketi</span><br></pre></td></tr></table></figure>
+
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><ul>
+<li><p><a href="https://jimmysong.io/kubernetes-handbook/practice/using-glusterfs-for-persistent-storage.html">使用glusterfs做持久化存储</a></p>
+</li>
+<li><p><a href="http://blog.csdn.net/liukuan73/article/details/78477520">CentOS7上Glusterfs的安装及使用（gluster&#x2F;heketi)</a></p>
+</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="followme">
+  <span>Welcome to my other publishing channels</span>
+
+  <div class="social-list">
+
+      <div class="social-item">
+          <a target="_blank" class="social-link" href="/atom.xml">
+            <span class="icon">
+              <i class="fa fa-rss"></i>
+            </span>
+
+            <span class="label">RSS</span>
+          </a>
+      </div>
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/linux/" rel="tag"># linux</a>
+              <a href="/tags/kubernetes/" rel="tag"># kubernetes</a>
+              <a href="/tags/glusterfs/" rel="tag"># glusterfs</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2018/01/18/Running-Kubernetes-Locally-via-Minikube/" rel="prev" title="在 Mac 上通过 Minikube 安装本地 K8s 集群">
+                  <i class="fa fa-angle-left"></i> 在 Mac 上通过 Minikube 安装本地 K8s 集群
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2018/03/02/debug-in-k8s/" rel="next" title="在 Kubernetes 环境中 debug Java 程序">
+                  在 Kubernetes 环境中 debug Java 程序 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2024</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">巴蒂</span>
+  </div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="Total Visitors">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="Total Views">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/pisces/" rel="noopener" target="_blank">NexT.Pisces</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="Back to top">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pangu/4.0.7/pangu.min.js" integrity="sha256-j+yj56cdEY2CwkVtGyz18fNybFGpMGJ8JxG3GSyO2+I=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/sidebar.js"></script><script src="/js/next-boot.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.4.1/search.js" integrity="sha256-1kfA5uHPf65M5cphT2dvymhkuyHPQp5A53EGZOnOLmc=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+
+
+
+
+  
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+
+</body>
+</html>

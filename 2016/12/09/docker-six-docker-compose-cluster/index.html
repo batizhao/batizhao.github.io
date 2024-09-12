@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 7.3.0">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha256-XOqroi11tY4EFQMR9ZYwZWKj5ZXiftSx36RRuC3anlA=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"batizhao.github.io","root":"/","images":"/images","scheme":"Pisces","darkmode":false,"version":"8.20.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"post","padding":18,"offset":12},"hljswrap":true,"copycode":{"enable":false,"style":null},"fold":{"enable":false,"height":500},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":true,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"},"path":"/search.xml","localsearch":{"enable":true,"top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="在 实战（四） 中，使用 HAProxy 和 Tomcat 搭建了一个简单的 Tomcat 集群。这节会去掉 Tomcat，使用 Spring Boot 和 MySQL 组成一个比较典型的负载均衡集群。 目录123456compose-haproxy-web- docker-compose.yml+ haproxy  - haproxy.cfg+ web  - paper-0.0.1-SNAPSH">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Docker 实战（六）：使用 Docker Compose 搭建 Web 集群">
+<meta property="og:url" content="http://batizhao.github.io/2016/12/09/docker-six-docker-compose-cluster/index.html">
+<meta property="og:site_name" content="Gunner">
+<meta property="og:description" content="在 实战（四） 中，使用 HAProxy 和 Tomcat 搭建了一个简单的 Tomcat 集群。这节会去掉 Tomcat，使用 Spring Boot 和 MySQL 组成一个比较典型的负载均衡集群。 目录123456compose-haproxy-web- docker-compose.yml+ haproxy  - haproxy.cfg+ web  - paper-0.0.1-SNAPSH">
+<meta property="og:locale">
+<meta property="article:published_time" content="2016-12-09T01:49:43.000Z">
+<meta property="article:modified_time" content="2024-09-11T08:18:28.525Z">
+<meta property="article:author" content="巴蒂">
+<meta property="article:tag" content="linux">
+<meta property="article:tag" content="mysql">
+<meta property="article:tag" content="tomcat">
+<meta property="article:tag" content="docker">
+<meta property="article:tag" content="haproxy">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="http://batizhao.github.io/2016/12/09/docker-six-docker-compose-cluster/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-Hans","comments":true,"permalink":"http://batizhao.github.io/2016/12/09/docker-six-docker-compose-cluster/","path":"2016/12/09/docker-six-docker-compose-cluster/","title":"Docker 实战（六）：使用 Docker Compose 搭建 Web 集群"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>Docker 实战（六）：使用 Docker Compose 搭建 Web 集群 | Gunner</title>
+  
+
+  <script src="/js/third-party/analytics/baidu-analytics.js"></script>
+  <script async src="https://hm.baidu.com/hm.js?4e3ffdab4387b8ef0d7c7c587e39xxxx"></script>
+
+
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+<link rel="alternate" href="/atom.xml" title="Gunner" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">Gunner</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="Search" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>Search
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="Searching..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%9B%AE%E5%BD%95"><span class="nav-number">1.</span> <span class="nav-text">目录</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#docker-compose-yml"><span class="nav-number">2.</span> <span class="nav-text">docker-compose.yml</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#MySQL-%E9%85%8D%E7%BD%AE"><span class="nav-number">2.1.</span> <span class="nav-text">MySQL 配置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Web-%E9%85%8D%E7%BD%AE"><span class="nav-number">2.2.</span> <span class="nav-text">Web 配置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%85%A8%E9%83%A8%E7%9A%84-compose-%E9%85%8D%E7%BD%AE"><span class="nav-number">2.3.</span> <span class="nav-text">全部的 compose 配置</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#haproxy-cfg"><span class="nav-number">3.</span> <span class="nav-text">haproxy.cfg</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%90%AF%E5%8A%A8%E5%AE%B9%E5%99%A8"><span class="nav-number">4.</span> <span class="nav-text">启动容器</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">巴蒂</p>
+  <div class="site-description" itemprop="description">心中总有个梦想，想英雄一样地走过这世界。</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">59</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">12</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">40</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/batizhao" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;batizhao" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:zhaobati@gmail.com" title="E-Mail → mailto:zhaobati@gmail.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="http://batizhao.github.io/2016/12/09/docker-six-docker-compose-cluster/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="巴蒂">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Gunner">
+      <meta itemprop="description" content="心中总有个梦想，想英雄一样地走过这世界。">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="Docker 实战（六）：使用 Docker Compose 搭建 Web 集群 | Gunner">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Docker 实战（六）：使用 Docker Compose 搭建 Web 集群
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2016-12-09 09:49:43" itemprop="dateCreated datePublished" datetime="2016-12-09T09:49:43+08:00">2016-12-09</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">Edited on</span>
+      <time title="Modified: 2024-09-11 16:18:28" itemprop="dateModified" datetime="2024-09-11T16:18:28+08:00">2024-09-11</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/docker/" itemprop="url" rel="index"><span itemprop="name">docker</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="Views" id="busuanzi_container_page_pv">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">Views: </span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>在 <a href="http://batizhao.github.io/2016/12/01/docker-four-docker-compose/">实战（四）</a> 中，使用 HAProxy 和 Tomcat 搭建了一个简单的 Tomcat 集群。<br>这节会去掉 Tomcat，使用 Spring Boot 和 MySQL 组成一个比较典型的负载均衡集群。</p>
+<h2 id="目录"><a href="#目录" class="headerlink" title="目录"></a>目录</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">compose-haproxy-web</span><br><span class="line">- docker-compose.yml</span><br><span class="line">+ haproxy</span><br><span class="line">  - haproxy.cfg</span><br><span class="line">+ web</span><br><span class="line">  - paper-0.0.1-SNAPSHOT.jar</span><br></pre></td></tr></table></figure>
+
+<span id="more"></span>
+
+<h2 id="docker-compose-yml"><a href="#docker-compose-yml" class="headerlink" title="docker-compose.yml"></a>docker-compose.yml</h2><h3 id="MySQL-配置"><a href="#MySQL-配置" class="headerlink" title="MySQL 配置"></a>MySQL 配置</h3><figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">image:</span> <span class="string">batizhao/mysql</span></span><br><span class="line"><span class="attr">environment:</span></span><br><span class="line">  <span class="attr">MYSQL_ROOT_PASSWORD:</span> <span class="string">password</span></span><br><span class="line">  <span class="attr">MYSQL_DATABASE:</span> <span class="string">paper</span></span><br><span class="line">  <span class="attr">MYSQL_ROOT_HOST:</span> <span class="string">&quot;%&quot;</span></span><br><span class="line"><span class="attr">expose:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">&quot;3306&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>MYSQL_DATABASE</strong> 需要在启动时创建 paper 数据库。<br><strong>MYSQL_ROOT_HOST</strong> 在 mysql user 中增加客户端远程访问的权限。</p>
+<p>在 batizhao&#x2F;mysql 这个镜像中，有一个自定义的 my.cnf 文件，主要是定义了 bind-address ，否则会遇到 CommunicationsException: Communications link failure 的错误，还有一些服务端、客户端 UTF-8 编码的定义。</p>
+<h3 id="Web-配置"><a href="#Web-配置" class="headerlink" title="Web 配置"></a>Web 配置</h3><figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">image:</span> <span class="string">batizhao/java:8</span></span><br><span class="line"><span class="attr">command:</span> <span class="string">java</span> <span class="string">-jar</span> <span class="string">opt/paper.jar</span></span><br><span class="line"><span class="attr">volumes:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">./web/paper-0.0.1-SNAPSHOT.jar:/opt/paper.jar</span></span><br><span class="line"><span class="attr">depends_on:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">&quot;mysql&quot;</span></span><br><span class="line"><span class="attr">links:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">&quot;mysql:database&quot;</span></span><br><span class="line"><span class="attr">expose:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">&quot;8080&quot;</span></span><br><span class="line"><span class="attr">environment:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">SPRING_DATASOURCE_URL=jdbc:mysql://database:3306/paper?useUnicode=true&amp;useSSL=false</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">SPRING_DATASOURCE_USERNAME=root</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">SPRING_DATASOURCE_PASSWORD=password</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">SPRING_DATASOURCE_SQL-SCRIPT-ENCODING=UTF-8</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>volumes</strong> 这个 Spring Boot 应用在 <a href="https://github.com/batizhao/paper">Github</a>，可以自己打包放到 web 目录。<br><strong>SPRING_DATASOURCE_SQL-SCRIPT-ENCODING</strong> 这个配置必须要有，否则初始化脚本会插入乱码到数据库。已经确定和 MySQL 无关，因为在宿主机启动 App 直接连接 MySQL 容器，并且在启动后插入中文数据都没有问题。只是在容器中启动 App 初始化时才会乱码，后来改 Web 容器编码也不起作用，加上这个配置就好了。</p>
+<h3 id="全部的-compose-配置"><a href="#全部的-compose-配置" class="headerlink" title="全部的 compose 配置"></a>全部的 compose 配置</h3><figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">version:</span> <span class="string">&#x27;2&#x27;</span></span><br><span class="line"><span class="attr">services:</span></span><br><span class="line">  <span class="attr">mysql:</span></span><br><span class="line">      <span class="attr">image:</span> <span class="string">batizhao/mysql</span></span><br><span class="line">      <span class="attr">environment:</span></span><br><span class="line">        <span class="attr">MYSQL_ROOT_PASSWORD:</span> <span class="string">password</span></span><br><span class="line">        <span class="attr">MYSQL_DATABASE:</span> <span class="string">paper</span></span><br><span class="line">        <span class="attr">MYSQL_ROOT_HOST:</span> <span class="string">&quot;%&quot;</span></span><br><span class="line">      <span class="attr">expose:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="string">&quot;3306&quot;</span></span><br><span class="line"></span><br><span class="line">  <span class="attr">weba:</span></span><br><span class="line">      <span class="attr">image:</span> <span class="string">batizhao/java:8</span></span><br><span class="line">      <span class="attr">command:</span> <span class="string">java</span> <span class="string">-jar</span> <span class="string">opt/paper.jar</span></span><br><span class="line">      <span class="attr">volumes:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="string">./web/paper-0.0.1-SNAPSHOT.jar:/opt/paper.jar</span></span><br><span class="line">      <span class="attr">depends_on:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="string">&quot;mysql&quot;</span></span><br><span class="line">      <span class="attr">links:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="string">&quot;mysql:database&quot;</span></span><br><span class="line">      <span class="attr">expose:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="string">&quot;8080&quot;</span></span><br><span class="line">      <span class="attr">environment:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="string">SPRING_DATASOURCE_URL=jdbc:mysql://database:3306/paper?useUnicode=true&amp;useSSL=false</span></span><br><span class="line">        <span class="bullet">-</span> <span class="string">SPRING_DATASOURCE_USERNAME=root</span></span><br><span class="line">        <span class="bullet">-</span> <span class="string">SPRING_DATASOURCE_PASSWORD=password</span></span><br><span class="line">        <span class="bullet">-</span> <span class="string">SPRING_DATASOURCE_SQL-SCRIPT-ENCODING=UTF-8</span></span><br><span class="line"></span><br><span class="line">  <span class="attr">webb:</span></span><br><span class="line">      <span class="attr">image:</span> <span class="string">batizhao/java:8</span></span><br><span class="line">      <span class="attr">command:</span> <span class="string">java</span> <span class="string">-jar</span> <span class="string">opt/paper.jar</span></span><br><span class="line">      <span class="attr">volumes:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="string">./web/paper-0.0.1-SNAPSHOT.jar:/opt/paper.jar</span></span><br><span class="line">      <span class="attr">depends_on:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="string">&quot;mysql&quot;</span></span><br><span class="line">      <span class="attr">links:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="string">&quot;mysql:database&quot;</span></span><br><span class="line">      <span class="attr">expose:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="string">&quot;8080&quot;</span></span><br><span class="line">      <span class="attr">environment:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="string">SPRING_DATASOURCE_URL=jdbc:mysql://database:3306/paper?useUnicode=true&amp;useSSL=false</span></span><br><span class="line">        <span class="bullet">-</span> <span class="string">SPRING_DATASOURCE_USERNAME=root</span></span><br><span class="line">        <span class="bullet">-</span> <span class="string">SPRING_DATASOURCE_PASSWORD=password</span></span><br><span class="line">        <span class="bullet">-</span> <span class="string">SPRING_DATASOURCE_SQL-SCRIPT-ENCODING=UTF-8</span></span><br><span class="line"></span><br><span class="line">  <span class="attr">haproxy:</span></span><br><span class="line">      <span class="attr">image:</span> <span class="string">haproxy</span></span><br><span class="line">      <span class="attr">volumes:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="string">./haproxy:/haproxy-override</span></span><br><span class="line">        <span class="bullet">-</span> <span class="string">./haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro</span></span><br><span class="line">      <span class="attr">links:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="string">weba</span></span><br><span class="line">        <span class="bullet">-</span> <span class="string">webb</span></span><br><span class="line">      <span class="attr">ports:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="string">&quot;80:80&quot;</span></span><br><span class="line">        <span class="bullet">-</span> <span class="string">&quot;70:70&quot;</span></span><br><span class="line">      <span class="attr">expose:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="string">&quot;80&quot;</span></span><br><span class="line">        <span class="bullet">-</span> <span class="string">&quot;70&quot;</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="haproxy-cfg"><a href="#haproxy-cfg" class="headerlink" title="haproxy.cfg"></a>haproxy.cfg</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line">global</span><br><span class="line">  log 127.0.0.1	local0</span><br><span class="line">  log 127.0.0.1	local1 notice</span><br><span class="line">  maxconn 4096</span><br><span class="line">  daemon</span><br><span class="line"></span><br><span class="line">defaults</span><br><span class="line">  log	global</span><br><span class="line">  mode	http</span><br><span class="line">  option	httplog</span><br><span class="line">  option	dontlognull</span><br><span class="line">  retries	3</span><br><span class="line">  option redispatch</span><br><span class="line">  maxconn	2000</span><br><span class="line">  timeout connect	5000</span><br><span class="line">  timeout client	50000</span><br><span class="line">  timeout server	50000</span><br><span class="line"></span><br><span class="line">frontend balancer</span><br><span class="line">  bind 0.0.0.0:80</span><br><span class="line">  mode http</span><br><span class="line">  default_backend servers</span><br><span class="line"></span><br><span class="line">backend servers</span><br><span class="line">  option httpchk OPTIONS /</span><br><span class="line">  option forwardfor</span><br><span class="line">  cookie JSESSIONID prefix</span><br><span class="line">  server tomcat1 weba:8080 cookie JSESSIONID_SERVER_1 check inter 5000</span><br><span class="line">  server tomcat2 webb:8080 cookie JSESSIONID_SERVER_2 check inter 5000</span><br><span class="line"></span><br><span class="line">listen status</span><br><span class="line">  mode http</span><br><span class="line">  default_backend servers</span><br><span class="line">  bind 0.0.0.0:70</span><br><span class="line">  stats enable</span><br><span class="line">  stats hide-version</span><br><span class="line">  stats uri     /stats</span><br><span class="line">  stats auth    admin:password</span><br><span class="line">  stats admin if TRUE</span><br></pre></td></tr></table></figure>
+
+<h2 id="启动容器"><a href="#启动容器" class="headerlink" title="启动容器"></a>启动容器</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">$ docker-compose up</span><br><span class="line">Creating network &quot;composehaproxyweb_default&quot; with the default driver</span><br><span class="line">Creating composehaproxyweb_mysql_1</span><br><span class="line">Creating composehaproxyweb_webb_1</span><br><span class="line">Creating composehaproxyweb_weba_1</span><br><span class="line">Creating composehaproxyweb_haproxy_1</span><br><span class="line">Attaching to composehaproxyweb_mysql_1, composehaproxyweb_webb_1, composehaproxyweb_weba_1, composehaproxyweb_haproxy_1</span><br><span class="line">mysql_1    | Initializing database</span><br><span class="line">haproxy_1  | &lt;7&gt;haproxy-systemd-wrapper: executing /usr/local/sbin/haproxy -p /run/haproxy.pid -f /usr/local/etc/haproxy/haproxy.cfg -Ds</span><br><span class="line">mysql_1    | Database initialized</span><br><span class="line">mysql_1    | MySQL init process in progress...</span><br></pre></td></tr></table></figure>
+
+<p>访问 <a href="http://localhost/">http://localhost</a><br>使用 admin&#x2F;123456 可以登录系统。</p>
+<p>访问 <a href="http://localhost:70/stats">http://localhost:70/stats</a><br>使用 admin&#x2F;password 可以看到集群状态。</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="followme">
+  <span>Welcome to my other publishing channels</span>
+
+  <div class="social-list">
+
+      <div class="social-item">
+          <a target="_blank" class="social-link" href="/atom.xml">
+            <span class="icon">
+              <i class="fa fa-rss"></i>
+            </span>
+
+            <span class="label">RSS</span>
+          </a>
+      </div>
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/linux/" rel="tag"># linux</a>
+              <a href="/tags/mysql/" rel="tag"># mysql</a>
+              <a href="/tags/tomcat/" rel="tag"># tomcat</a>
+              <a href="/tags/docker/" rel="tag"># docker</a>
+              <a href="/tags/haproxy/" rel="tag"># haproxy</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2016/12/02/docker-five-swarm-mode/" rel="prev" title="Docker 实战（五）：Docker Swarm Mode">
+                  <i class="fa fa-angle-left"></i> Docker 实战（五）：Docker Swarm Mode
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2017/12/14/share-shasdowsocks-to-http/" rel="next" title="使用 Shasdowsocks + Privoxy 转 HTTP 代理">
+                  使用 Shasdowsocks + Privoxy 转 HTTP 代理 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2024</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">巴蒂</span>
+  </div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="Total Visitors">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="Total Views">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/pisces/" rel="noopener" target="_blank">NexT.Pisces</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="Back to top">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pangu/4.0.7/pangu.min.js" integrity="sha256-j+yj56cdEY2CwkVtGyz18fNybFGpMGJ8JxG3GSyO2+I=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/sidebar.js"></script><script src="/js/next-boot.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.4.1/search.js" integrity="sha256-1kfA5uHPf65M5cphT2dvymhkuyHPQp5A53EGZOnOLmc=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+
+
+
+
+  
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+
+</body>
+</html>

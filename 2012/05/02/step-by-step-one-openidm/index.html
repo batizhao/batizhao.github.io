@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 7.3.0">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha256-XOqroi11tY4EFQMR9ZYwZWKj5ZXiftSx36RRuC3anlA=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"batizhao.github.io","root":"/","images":"/images","scheme":"Pisces","darkmode":false,"version":"8.20.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"post","padding":18,"offset":12},"hljswrap":true,"copycode":{"enable":false,"style":null},"fold":{"enable":false,"height":500},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":true,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"},"path":"/search.xml","localsearch":{"enable":true,"top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="1. From OpenIDM To MySQL以 samples&#x2F;sample3 为模板，把新增加的 use,organization 分别同步到 MySQL 的 Users,Organizations 表。如果你看过 使用 OpenIDM RESTful API ,这时在 managedobjects 表中应该有两条数据。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="进阶使用 OpenIDM 【一】">
+<meta property="og:url" content="http://batizhao.github.io/2012/05/02/step-by-step-one-openidm/index.html">
+<meta property="og:site_name" content="Gunner">
+<meta property="og:description" content="1. From OpenIDM To MySQL以 samples&#x2F;sample3 为模板，把新增加的 use,organization 分别同步到 MySQL 的 Users,Organizations 表。如果你看过 使用 OpenIDM RESTful API ,这时在 managedobjects 表中应该有两条数据。">
+<meta property="og:locale">
+<meta property="article:published_time" content="2012-05-01T16:00:00.000Z">
+<meta property="article:modified_time" content="2024-09-11T08:18:28.522Z">
+<meta property="article:author" content="巴蒂">
+<meta property="article:tag" content="ldap">
+<meta property="article:tag" content="sso">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="http://batizhao.github.io/2012/05/02/step-by-step-one-openidm/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-Hans","comments":true,"permalink":"http://batizhao.github.io/2012/05/02/step-by-step-one-openidm/","path":"2012/05/02/step-by-step-one-openidm/","title":"进阶使用 OpenIDM 【一】"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>进阶使用 OpenIDM 【一】 | Gunner</title>
+  
+
+  <script src="/js/third-party/analytics/baidu-analytics.js"></script>
+  <script async src="https://hm.baidu.com/hm.js?4e3ffdab4387b8ef0d7c7c587e39xxxx"></script>
+
+
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+<link rel="alternate" href="/atom.xml" title="Gunner" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">Gunner</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="Search" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>Search
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="Searching..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-From-OpenIDM-To-MySQL"><span class="nav-number">1.</span> <span class="nav-text">1. From OpenIDM To MySQL</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-From-OpenIDM-To-OpenDJ"><span class="nav-number">2.</span> <span class="nav-text">2. From OpenIDM To OpenDJ</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-%E5%AE%9A%E6%97%B6%E5%90%8C%E6%AD%A5"><span class="nav-number">3.</span> <span class="nav-text">3. 定时同步</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">巴蒂</p>
+  <div class="site-description" itemprop="description">心中总有个梦想，想英雄一样地走过这世界。</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">59</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">12</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">40</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/batizhao" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;batizhao" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:zhaobati@gmail.com" title="E-Mail → mailto:zhaobati@gmail.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="http://batizhao.github.io/2012/05/02/step-by-step-one-openidm/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="巴蒂">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Gunner">
+      <meta itemprop="description" content="心中总有个梦想，想英雄一样地走过这世界。">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="进阶使用 OpenIDM 【一】 | Gunner">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          进阶使用 OpenIDM 【一】
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2012-05-02 00:00:00" itemprop="dateCreated datePublished" datetime="2012-05-02T00:00:00+08:00">2012-05-02</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">Edited on</span>
+      <time title="Modified: 2024-09-11 16:18:28" itemprop="dateModified" datetime="2024-09-11T16:18:28+08:00">2024-09-11</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/java/" itemprop="url" rel="index"><span itemprop="name">java</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="Views" id="busuanzi_container_page_pv">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">Views: </span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><h2 id="1-From-OpenIDM-To-MySQL"><a href="#1-From-OpenIDM-To-MySQL" class="headerlink" title="1. From OpenIDM To MySQL"></a>1. From OpenIDM To MySQL</h2><p>以 samples&#x2F;sample3 为模板，把新增加的 use,organization 分别同步到 MySQL 的 Users,Organizations 表。<br>如果你看过 <a href="http://localhost:4000/java/2012/04/20/using-openidm-with-rest-api/">使用 OpenIDM RESTful API</a> ,<br>这时在 managedobjects 表中应该有两条数据。</p>
+<span id="more"></span>
+
+<p>managed&#x2F;user</p>
+<pre><code>&#123;
+ &quot;_rev&quot;:&quot;0&quot;,
+ &quot;_id&quot;:&quot;joe&quot;,
+ &quot;email&quot;:[&quot;joe@example.com&quot;],
+ &quot;description&quot;:&quot;My first user&quot;,
+ &quot;familyName&quot;:&quot;smith&quot;,
+ &quot;userName&quot;:&quot;joe&quot;,
+ &quot;givenName&quot;:&quot;joe&quot;,
+ &quot;displayName&quot;:&quot;Felicitas Doe&quot;
+&#125;
+</code></pre>
+<p>managed&#x2F;organization</p>
+<pre><code>&#123;
+ &quot;_rev&quot;:&quot;0&quot;,
+ &quot;_id&quot;:&quot;shanghai&quot;,
+ &quot;dn&quot;:&quot;o=shanghai,dc=example,dc=com&quot;,
+ &quot;description&quot;:&quot;shanghai&quot;,
+ &quot;name&quot;:&quot;shanghai&quot;
+&#125;
+</code></pre>
+<p>执行</p>
+<pre><code># cp -r samples/sample3/conf samples/sample3/tools .
+</code></pre>
+<p>在我使用的这个版本中，CreateScript.groovy 脚本中 <code>__ACCOUNT__</code> 这段内容的语法有一个错误，参数属性的最后一段应该是 <code>,</code> 这里写成了 <code>;</code> 。</p>
+<p>用以下内容替换 sync.json 文件</p>
+<pre><code>&#123;
+&quot;mappings&quot; : [
+    &#123;
+        &quot;name&quot; : &quot;managedOrganization_hrdb&quot;,
+        &quot;source&quot; : &quot;managed/organization&quot;,
+        &quot;target&quot; : &quot;system/hrdb/organization&quot;,
+        &quot;properties&quot; : [
+            &#123;
+                &quot;source&quot; : &quot;description&quot;,
+                &quot;target&quot; : &quot;description&quot;
+            &#125;,
+            &#123;
+                &quot;source&quot; : &quot;name&quot;,
+                &quot;target&quot; : &quot;name&quot;
+            &#125;
+        ],
+        &quot;policies&quot; : [
+            &#123;
+                &quot;situation&quot; : &quot;CONFIRMED&quot;,
+                &quot;action&quot; : &quot;UPDATE&quot;
+            &#125;,
+            &#123;
+                &quot;situation&quot; : &quot;FOUND&quot;,
+                &quot;action&quot; : &quot;UPDATE&quot;
+            &#125;,
+            &#123;
+                &quot;situation&quot; : &quot;ABSENT&quot;,
+                &quot;action&quot; : &quot;CREATE&quot;
+            &#125;,
+            &#123;
+                &quot;situation&quot; : &quot;AMBIGUOUS&quot;,
+                &quot;action&quot; : &quot;EXCEPTION&quot;
+            &#125;,
+            &#123;
+                &quot;situation&quot; : &quot;MISSING&quot;,
+                &quot;action&quot; : &quot;UNLINK&quot;
+            &#125;,
+            &#123;
+                &quot;situation&quot; : &quot;SOURCE_MISSING&quot;,
+                &quot;action&quot; : &quot;IGNORE&quot;
+            &#125;,
+            &#123;
+                &quot;situation&quot; : &quot;UNQUALIFIED&quot;,
+                &quot;action&quot; : &quot;IGNORE&quot;
+            &#125;,
+            &#123;
+                &quot;situation&quot; : &quot;UNASSIGNED&quot;,
+                &quot;action&quot; : &quot;IGNORE&quot;
+            &#125;
+        ]
+    &#125;,
+    &#123;
+        &quot;name&quot; : &quot;managedUser_hrdb&quot;,
+        &quot;source&quot; : &quot;managed/user&quot;,
+        &quot;target&quot; : &quot;system/hrdb/account&quot;,
+        &quot;properties&quot; : [
+            &#123;
+                &quot;source&quot; : &quot;email&quot;,
+                &quot;target&quot; : &quot;email&quot;
+            &#125;,
+            &#123;
+                &quot;source&quot; : &quot;userName&quot;,
+                &quot;target&quot; : &quot;uid&quot;
+            &#125;,
+            &#123;
+                &quot;source&quot; : &quot;familyName&quot;,
+                &quot;target&quot; : &quot;lastName&quot;
+            &#125;,
+            &#123;
+                &quot;source&quot; : &quot;givenName&quot;,
+                &quot;target&quot; : &quot;firstName&quot;
+            &#125;,
+            &#123;
+                &quot;source&quot; : &quot;displayName&quot;,
+                &quot;target&quot; : &quot;fullName&quot;
+            &#125;,
+            &#123;
+                &quot;source&quot; : &quot;description&quot;,
+                &quot;target&quot; : &quot;organization&quot;
+            &#125;
+        ],
+        &quot;policies&quot; : [
+            &#123;
+                &quot;situation&quot; : &quot;CONFIRMED&quot;,
+                &quot;action&quot; : &quot;UPDATE&quot;
+            &#125;,
+            &#123;
+                &quot;situation&quot; : &quot;FOUND&quot;,
+                &quot;action&quot; : &quot;UPDATE&quot;
+            &#125;,
+            &#123;
+                &quot;situation&quot; : &quot;ABSENT&quot;,
+                &quot;action&quot; : &quot;CREATE&quot;
+            &#125;,
+            &#123;
+                &quot;situation&quot; : &quot;AMBIGUOUS&quot;,
+                &quot;action&quot; : &quot;EXCEPTION&quot;
+            &#125;,
+            &#123;
+                &quot;situation&quot; : &quot;MISSING&quot;,
+                &quot;action&quot; : &quot;UNLINK&quot;
+            &#125;,
+            &#123;
+                &quot;situation&quot; : &quot;SOURCE_MISSING&quot;,
+                &quot;action&quot; : &quot;IGNORE&quot;
+            &#125;,
+            &#123;
+                &quot;situation&quot; : &quot;UNQUALIFIED&quot;,
+                &quot;action&quot; : &quot;IGNORE&quot;
+            &#125;,
+            &#123;
+                &quot;situation&quot; : &quot;UNASSIGNED&quot;,
+                &quot;action&quot; : &quot;IGNORE&quot;
+            &#125;
+        ]
+    &#125;
+]&#125;
+</code></pre>
+<p>provisioner.openicf-scriptedsql.json 文件中只需要修改 configurationProperties 这段内容</p>
+<pre><code>&quot;configurationProperties&quot; : &#123;
+    ...
+    &quot;password&quot; : &quot;Your MySQL password&quot;,
+    ...
+    &quot;createScriptFileName&quot; : &quot;/opt/openidm/tools/CreateScript.groovy&quot;,
+    &quot;testScriptFileName&quot; : &quot;/opt/openidm/tools/TestScript.groovy&quot;,
+    &quot;searchScriptFileName&quot; : &quot;/opt/openidm/tools/SearchScript.groovy&quot;,
+    &quot;deleteScriptFileName&quot; : &quot;/opt/openidm/tools/DeleteScript.groovy&quot;,
+    &quot;updateScriptFileName&quot; : &quot;/opt/openidm/tools/UpdateScript.groovy&quot;,
+    &quot;syncScriptFileName&quot; : &quot;/opt/openidm/tools/SyncScript.groovy&quot;
+&#125;
+</code></pre>
+<p>重启 OpenIDM 后，执行</p>
+<pre><code># curl \
+--header &quot;X-OpenIDM-Username: openidm-admin&quot; \
+--header &quot;X-OpenIDM-Password: openidm-admin&quot; \
+--request POST &quot;http://openam.example.com:9090/openidm/sync?_action=recon&amp;mapping=managedOrganization_hrdb&quot;
+
+# curl \
+--header &quot;X-OpenIDM-Username: openidm-admin&quot; \
+--header &quot;X-OpenIDM-Password: openidm-admin&quot; \
+--request POST &quot;http://openam.example.com:9090/openidm/sync?_action=recon&amp;mapping=managedUser_hrdb&quot;
+</code></pre>
+<p>返回 JSON 结果</p>
+<pre><code>&#123;&quot;reconId&quot;:&quot;6073945c-60d8-4db3-97e5-e0ac0e5753d6&quot;&#125;
+</code></pre>
+<p>然后查看 MySQL 数据库 Users 和 Organizations ，数据已经成功同步。		</p>
+<h2 id="2-From-OpenIDM-To-OpenDJ"><a href="#2-From-OpenIDM-To-OpenDJ" class="headerlink" title="2. From OpenIDM To OpenDJ"></a>2. From OpenIDM To OpenDJ</h2><p>以 samples&#x2F;sample2 为模板（不要覆盖之前的 sync.json 文件），把新增加的 use,organization 同步到 OpenDJ 。</p>
+<pre><code># cp samples/sample2b/conf/provisioner.openicf-ldap.json conf
+# cp -r samples/sample2b/script .
+</code></pre>
+<p>在 sync.json 中增加</p>
+<pre><code>&#123;
+    &quot;name&quot; : &quot;managedOrganization_ldap&quot;,
+    &quot;source&quot; : &quot;managed/organization&quot;,
+    &quot;target&quot; : &quot;system/ldap/organization&quot;,
+    &quot;properties&quot; : [
+        &#123;
+            &quot;source&quot; : &quot;description&quot;,
+            &quot;target&quot; : &quot;description&quot;
+        &#125;,
+        &#123;
+            &quot;source&quot; : &quot;name&quot;,
+            &quot;target&quot; : &quot;o&quot;
+        &#125;,
+        &#123;
+            &quot;source&quot; : &quot;dn&quot;,
+            &quot;target&quot; : &quot;dn&quot;
+        &#125;
+    ],
+    &quot;policies&quot; : [
+        &#123;
+            &quot;situation&quot; : &quot;CONFIRMED&quot;,
+            &quot;action&quot; : &quot;UPDATE&quot;
+        &#125;,
+        &#123;
+            &quot;situation&quot; : &quot;FOUND&quot;,
+            &quot;action&quot; : &quot;LINK&quot;
+        &#125;,
+        &#123;
+            &quot;situation&quot; : &quot;ABSENT&quot;,
+            &quot;action&quot; : &quot;CREATE&quot;
+        &#125;,
+        &#123;
+            &quot;situation&quot; : &quot;AMBIGUOUS&quot;,
+            &quot;action&quot; : &quot;IGNORE&quot;
+        &#125;,
+        &#123;
+            &quot;situation&quot; : &quot;MISSING&quot;,
+            &quot;action&quot; : &quot;IGNORE&quot;
+        &#125;,
+        &#123;
+            &quot;situation&quot; : &quot;SOURCE_MISSING&quot;,
+            &quot;action&quot; : &quot;IGNORE&quot;
+        &#125;,
+        &#123;
+            &quot;situation&quot; : &quot;UNQUALIFIED&quot;,
+            &quot;action&quot; : &quot;IGNORE&quot;
+        &#125;,
+        &#123;
+            &quot;situation&quot; : &quot;UNASSIGNED&quot;,
+            &quot;action&quot; : &quot;IGNORE&quot;
+        &#125;
+    ]
+&#125;,
+&#123;
+    &quot;name&quot; : &quot;managedUser_ldap&quot;,
+    &quot;source&quot; : &quot;managed/user&quot;,
+    &quot;target&quot; : &quot;system/ldap/account&quot;,
+    &quot;correlationQuery&quot; : &#123;
+        &quot;type&quot; : &quot;text/javascript&quot;,
+        &quot;file&quot; : &quot;script/ldapBackCorrelationQuery.js&quot;
+    &#125;,
+    &quot;properties&quot; : [
+        &#123;
+            &quot;source&quot; : &quot;givenName&quot;,
+            &quot;target&quot; : &quot;givenName&quot;
+        &#125;,
+        &#123;
+            &quot;source&quot; : &quot;familyName&quot;,
+            &quot;target&quot; : &quot;sn&quot;
+        &#125;,
+        &#123;
+            &quot;source&quot; : &quot;displayName&quot;,
+            &quot;target&quot; : &quot;cn&quot;
+        &#125;,
+        &#123;
+            &quot;source&quot; : &quot;userName&quot;,
+            &quot;target&quot; : &quot;uid&quot;
+        &#125;,
+        &#123;
+            &quot;source&quot; : &quot;description&quot;,
+            &quot;target&quot; : &quot;description&quot;
+        &#125;,
+        &#123;
+            &quot;source&quot; : &quot;email&quot;,
+            &quot;target&quot; : &quot;mail&quot;
+        &#125;
+    ],
+    &quot;onCreate&quot; : &#123;
+        &quot;type&quot; : &quot;text/javascript&quot;,
+        &quot;source&quot; : &quot;target.dn = &#39;uid=&#39; + source.userName + &#39;,o=shanghai,dc=example,dc=com&#39;;&quot;
+    &#125;,
+    &quot;policies&quot; : [
+        &#123;
+            &quot;situation&quot; : &quot;CONFIRMED&quot;,
+            &quot;action&quot; : &quot;UPDATE&quot;
+        &#125;,
+        &#123;
+            &quot;situation&quot; : &quot;FOUND&quot;,
+            &quot;action&quot; : &quot;LINK&quot;
+        &#125;,
+        &#123;
+            &quot;situation&quot; : &quot;ABSENT&quot;,
+            &quot;action&quot; : &quot;CREATE&quot;
+        &#125;,
+        &#123;
+            &quot;situation&quot; : &quot;AMBIGUOUS&quot;,
+            &quot;action&quot; : &quot;IGNORE&quot;
+        &#125;,
+        &#123;
+            &quot;situation&quot; : &quot;MISSING&quot;,
+            &quot;action&quot; : &quot;IGNORE&quot;
+        &#125;,
+        &#123;
+            &quot;situation&quot; : &quot;SOURCE_MISSING&quot;,
+            &quot;action&quot; : &quot;IGNORE&quot;
+        &#125;,
+        &#123;
+            &quot;situation&quot; : &quot;UNQUALIFIED&quot;,
+            &quot;action&quot; : &quot;IGNORE&quot;
+        &#125;,
+        &#123;
+            &quot;situation&quot; : &quot;UNASSIGNED&quot;,
+            &quot;action&quot; : &quot;IGNORE&quot;
+        &#125;
+    ]
+&#125;
+</code></pre>
+<p>修改 provisioner.openicf-ldap.json，在 “objectTypes” 中增加</p>
+<pre><code>&quot;organization&quot; :
+&#123;
+   &quot;$schema&quot; : &quot;http://json-schema.org/draft-03/schema&quot;,
+   &quot;id&quot; : &quot;organization&quot;,
+   &quot;type&quot; : &quot;object&quot;,
+   &quot;nativeType&quot; : &quot;organization&quot;,
+   &quot;properties&quot; :
+      &#123;
+         &quot;preferredDeliveryMethod&quot; :
+            &#123;
+               &quot;type&quot; : &quot;string&quot;,
+               &quot;nativeName&quot; : &quot;preferredDeliveryMethod&quot;,
+               &quot;nativeType&quot; : &quot;string&quot;
+            &#125;,
+         &quot;seeAlso&quot; :
+            &#123;
+               &quot;type&quot; : &quot;array&quot;,
+               &quot;items&quot; :
+                  &#123;
+                     &quot;type&quot; : &quot;string&quot;,
+                     &quot;nativeType&quot; : &quot;string&quot;
+                  &#125;,
+               &quot;nativeName&quot; : &quot;seeAlso&quot;,
+               &quot;nativeType&quot; : &quot;string&quot;
+            &#125;,
+         &quot;x121Address&quot; :
+            &#123;
+               &quot;type&quot; : &quot;array&quot;,
+               &quot;items&quot; :
+                  &#123;
+                     &quot;type&quot; : &quot;string&quot;,
+                     &quot;nativeType&quot; : &quot;string&quot;
+                  &#125;,
+               &quot;nativeName&quot; : &quot;x121Address&quot;,
+               &quot;nativeType&quot; : &quot;string&quot;
+            &#125;,
+         &quot;l&quot; :
+            &#123;
+               &quot;type&quot; : &quot;array&quot;,
+               &quot;items&quot; :
+                  &#123;
+                     &quot;type&quot; : &quot;string&quot;,
+                     &quot;nativeType&quot; : &quot;string&quot;
+                  &#125;,
+               &quot;nativeName&quot; : &quot;l&quot;,
+               &quot;nativeType&quot; : &quot;string&quot;
+            &#125;,
+         &quot;o&quot; :
+            &#123;
+               &quot;type&quot; : &quot;array&quot;,
+               &quot;items&quot; :
+                  &#123;
+                     &quot;type&quot; : &quot;string&quot;,
+                     &quot;nativeType&quot; : &quot;string&quot;
+                  &#125;,
+               &quot;required&quot; : true,
+               &quot;nativeName&quot; : &quot;o&quot;,
+               &quot;nativeType&quot; : &quot;string&quot;
+            &#125;,
+         &quot;businessCategory&quot; :
+            &#123;
+               &quot;type&quot; : &quot;array&quot;,
+               &quot;items&quot; :
+                  &#123;
+                     &quot;type&quot; : &quot;string&quot;,
+                     &quot;nativeType&quot; : &quot;string&quot;
+                  &#125;,
+               &quot;nativeName&quot; : &quot;businessCategory&quot;,
+               &quot;nativeType&quot; : &quot;string&quot;
+            &#125;,
+         &quot;street&quot; :
+            &#123;
+               &quot;type&quot; : &quot;array&quot;,
+               &quot;items&quot; :
+                  &#123;
+                     &quot;type&quot; : &quot;string&quot;,
+                     &quot;nativeType&quot; : &quot;string&quot;
+                  &#125;,
+               &quot;nativeName&quot; : &quot;street&quot;,
+               &quot;nativeType&quot; : &quot;string&quot;
+            &#125;,
+         &quot;postOfficeBox&quot; :
+            &#123;
+               &quot;type&quot; : &quot;array&quot;,
+               &quot;items&quot; :
+                  &#123;
+                     &quot;type&quot; : &quot;string&quot;,
+                     &quot;nativeType&quot; : &quot;string&quot;
+                  &#125;,
+               &quot;nativeName&quot; : &quot;postOfficeBox&quot;,
+               &quot;nativeType&quot; : &quot;string&quot;
+            &#125;,
+         &quot;postalCode&quot; :
+            &#123;
+               &quot;type&quot; : &quot;array&quot;,
+               &quot;items&quot; :
+                  &#123;
+                     &quot;type&quot; : &quot;string&quot;,
+                     &quot;nativeType&quot; : &quot;string&quot;
+                  &#125;,
+               &quot;nativeName&quot; : &quot;postalCode&quot;,
+               &quot;nativeType&quot; : &quot;string&quot;
+            &#125;,
+         &quot;st&quot; :
+            &#123;
+               &quot;type&quot; : &quot;array&quot;,
+               &quot;items&quot; :
+                  &#123;
+                     &quot;type&quot; : &quot;string&quot;,
+                     &quot;nativeType&quot; : &quot;string&quot;
+                  &#125;,
+               &quot;nativeName&quot; : &quot;st&quot;,
+               &quot;nativeType&quot; : &quot;string&quot;
+            &#125;,
+         &quot;registeredAddress&quot; :
+            &#123;
+               &quot;type&quot; : &quot;array&quot;,
+               &quot;items&quot; :
+                  &#123;
+                     &quot;type&quot; : &quot;string&quot;,
+                     &quot;nativeType&quot; : &quot;string&quot;
+                  &#125;,
+               &quot;nativeName&quot; : &quot;registeredAddress&quot;,
+               &quot;nativeType&quot; : &quot;string&quot;
+            &#125;,
+         &quot;postalAddress&quot; :
+            &#123;
+               &quot;type&quot; : &quot;array&quot;,
+               &quot;items&quot; :
+                  &#123;
+                     &quot;type&quot; : &quot;string&quot;,
+                     &quot;nativeType&quot; : &quot;string&quot;
+                  &#125;,
+               &quot;nativeName&quot; : &quot;postalAddress&quot;,
+               &quot;nativeType&quot; : &quot;string&quot;
+            &#125;,
+         &quot;objectClass&quot; :
+            &#123;
+               &quot;type&quot; : &quot;array&quot;,
+               &quot;items&quot; :
+                  &#123;
+                     &quot;type&quot; : &quot;string&quot;,
+                     &quot;nativeType&quot; : &quot;string&quot;
+                  &#125;,
+               &quot;nativeName&quot; : &quot;objectClass&quot;,
+               &quot;nativeType&quot; : &quot;string&quot;,
+               &quot;flags&quot; :
+                  [
+                     &quot;NOT_CREATABLE&quot;,
+                     &quot;NOT_UPDATEABLE&quot;
+                  ]
+            &#125;,
+         &quot;description&quot; :
+            &#123;
+               &quot;type&quot; : &quot;array&quot;,
+               &quot;items&quot; :
+                  &#123;
+                     &quot;type&quot; : &quot;string&quot;,
+                     &quot;nativeType&quot; : &quot;string&quot;
+                  &#125;,
+               &quot;nativeName&quot; : &quot;description&quot;,
+               &quot;nativeType&quot; : &quot;string&quot;
+            &#125;,
+         &quot;internationaliSDNNumber&quot; :
+            &#123;
+               &quot;type&quot; : &quot;array&quot;,
+               &quot;items&quot; :
+                  &#123;
+                     &quot;type&quot; : &quot;string&quot;,
+                     &quot;nativeType&quot; : &quot;string&quot;
+                  &#125;,
+               &quot;nativeName&quot; : &quot;internationaliSDNNumber&quot;,
+               &quot;nativeType&quot; : &quot;string&quot;
+            &#125;,
+         &quot;searchGuide&quot; :
+            &#123;
+               &quot;type&quot; : &quot;array&quot;,
+               &quot;items&quot; :
+                  &#123;
+                     &quot;type&quot; : &quot;string&quot;,
+                     &quot;nativeType&quot; : &quot;string&quot;
+                  &#125;,
+               &quot;nativeName&quot; : &quot;searchGuide&quot;,
+               &quot;nativeType&quot; : &quot;string&quot;
+            &#125;,
+         &quot;physicalDeliveryOfficeName&quot; :
+            &#123;
+               &quot;type&quot; : &quot;array&quot;,
+               &quot;items&quot; :
+                  &#123;
+                     &quot;type&quot; : &quot;string&quot;,
+                     &quot;nativeType&quot; : &quot;string&quot;
+                  &#125;,
+               &quot;nativeName&quot; : &quot;physicalDeliveryOfficeName&quot;,
+               &quot;nativeType&quot; : &quot;string&quot;
+            &#125;,
+         &quot;telexNumber&quot; :
+            &#123;
+               &quot;type&quot; : &quot;array&quot;,
+               &quot;items&quot; :
+                  &#123;
+                     &quot;type&quot; : &quot;string&quot;,
+                     &quot;nativeType&quot; : &quot;string&quot;
+                  &#125;,
+               &quot;nativeName&quot; : &quot;telexNumber&quot;,
+               &quot;nativeType&quot; : &quot;string&quot;
+            &#125;,
+         &quot;teletexTerminalIdentifier&quot; :
+            &#123;
+               &quot;type&quot; : &quot;array&quot;,
+               &quot;items&quot; :
+                  &#123;
+                     &quot;type&quot; : &quot;string&quot;,
+                     &quot;nativeType&quot; : &quot;string&quot;
+                  &#125;,
+               &quot;nativeName&quot; : &quot;teletexTerminalIdentifier&quot;,
+               &quot;nativeType&quot; : &quot;string&quot;
+            &#125;,
+         &quot;userPassword&quot; :
+            &#123;
+               &quot;type&quot; : &quot;array&quot;,
+               &quot;items&quot; :
+                  &#123;
+                     &quot;type&quot; : &quot;string&quot;,
+                     &quot;nativeType&quot; : &quot;JAVA_TYPE_BYTE_ARRAY&quot;
+                  &#125;,
+               &quot;nativeName&quot; : &quot;userPassword&quot;,
+               &quot;nativeType&quot; : &quot;JAVA_TYPE_BYTE_ARRAY&quot;
+            &#125;,
+         &quot;dn&quot; :
+            &#123;
+               &quot;type&quot; : &quot;string&quot;,
+               &quot;required&quot; : true,
+               &quot;nativeName&quot; : &quot;__NAME__&quot;,
+               &quot;nativeType&quot; : &quot;string&quot;
+            &#125;,
+         &quot;telephoneNumber&quot; :
+            &#123;
+               &quot;type&quot; : &quot;array&quot;,
+               &quot;items&quot; :
+                  &#123;
+                     &quot;type&quot; : &quot;string&quot;,
+                     &quot;nativeType&quot; : &quot;string&quot;
+                  &#125;,
+               &quot;nativeName&quot; : &quot;telephoneNumber&quot;,
+               &quot;nativeType&quot; : &quot;string&quot;
+            &#125;,
+         &quot;destinationIndicator&quot; :
+            &#123;
+               &quot;type&quot; : &quot;array&quot;,
+               &quot;items&quot; :
+                  &#123;
+                     &quot;type&quot; : &quot;string&quot;,
+                     &quot;nativeType&quot; : &quot;string&quot;
+                  &#125;,
+               &quot;nativeName&quot; : &quot;destinationIndicator&quot;,
+               &quot;nativeType&quot; : &quot;string&quot;
+            &#125;,
+         &quot;facsimileTelephoneNumber&quot; :
+            &#123;
+               &quot;type&quot; : &quot;array&quot;,
+               &quot;items&quot; :
+                  &#123;
+                     &quot;type&quot; : &quot;string&quot;,
+                     &quot;nativeType&quot; : &quot;string&quot;
+                  &#125;,
+               &quot;nativeName&quot; : &quot;facsimileTelephoneNumber&quot;,
+               &quot;nativeType&quot; : &quot;string&quot;
+            &#125;
+      &#125;
+&#125;
+</code></pre>
+<p>重启 OpenIDM，执行	</p>
+<pre><code># curl \
+--header &quot;X-OpenIDM-Username: openidm-admin&quot; \
+--header &quot;X-OpenIDM-Password: openidm-admin&quot; \
+--request POST &quot;http://openam.example.com:9090/openidm/sync?_action=recon&amp;mapping=managedOrganization_ldap&quot;
+
+# curl \
+--header &quot;X-OpenIDM-Username: openidm-admin&quot; \
+--header &quot;X-OpenIDM-Password: openidm-admin&quot; \
+--request POST &quot;http://openam.example.com:9090/openidm/sync?_action=recon&amp;mapping=managedUser_ldap&quot;		
+</code></pre>
+<p>返回</p>
+<pre><code>&#123;&quot;reconId&quot;:&quot;60a9fa62-00ca-4dff-a538-94f09c161fde&quot;&#125;
+</code></pre>
+<p>这时查看 OpenDJ，已经同步成功。	</p>
+<h2 id="3-定时同步"><a href="#3-定时同步" class="headerlink" title="3. 定时同步"></a>3. 定时同步</h2><p>除了可以调用 REST API 同步之外，OpenIDM 也提供了 Cron 的方式进行调度。可以分别为上边的 4 个接口建立 scheduler-recon 文件。<br>以 managedOrganizationUnit_ldap 为例</p>
+<pre><code># cp samples/sample2/conf/scheduler-recon.json conf
+# mv conf/scheduler-recon.json conf/scheduler-recon_managedOrganization_ldap.json 
+</code></pre>
+<p>打开文件，enabled 修改为 true，schedule 和 mapping 修改为相应的配置</p>
+<pre><code>&#123;
+    &quot;enabled&quot; : true,
+    &quot;type&quot;: &quot;cron&quot;,
+    &quot;schedule&quot;: &quot;1 * * * * ?&quot;,
+    &quot;invokeService&quot;: &quot;sync&quot;,
+    &quot;invokeContext&quot;: &#123;
+        &quot;action&quot;: &quot;reconcile&quot;,
+        &quot;mapping&quot;: &quot;managedOrganization_ldap&quot;
+    &#125;
+&#125;
+</code></pre>
+<p>重启 OpenIDM 后，	Organization 和 User 会分别同步到 OpenDJ 和 MySQL。</p>
+<p>如果需要停止调度任务，除了修改 scheduler-recon.json 文件，可能还需要删除 configobjects 表中的 org.forgerock.openidm.scheduler 相关纪录。</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="followme">
+  <span>Welcome to my other publishing channels</span>
+
+  <div class="social-list">
+
+      <div class="social-item">
+          <a target="_blank" class="social-link" href="/atom.xml">
+            <span class="icon">
+              <i class="fa fa-rss"></i>
+            </span>
+
+            <span class="label">RSS</span>
+          </a>
+      </div>
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/ldap/" rel="tag"># ldap</a>
+              <a href="/tags/sso/" rel="tag"># sso</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2012/04/26/reset-mysql-root-password-on-mac/" rel="prev" title="重置 MySQL root 密码">
+                  <i class="fa fa-angle-left"></i> 重置 MySQL root 密码
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2012/05/03/step-by-step-two-openidm/" rel="next" title="进阶使用 OpenIDM 【二】">
+                  进阶使用 OpenIDM 【二】 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2024</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">巴蒂</span>
+  </div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="Total Visitors">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="Total Views">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/pisces/" rel="noopener" target="_blank">NexT.Pisces</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="Back to top">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pangu/4.0.7/pangu.min.js" integrity="sha256-j+yj56cdEY2CwkVtGyz18fNybFGpMGJ8JxG3GSyO2+I=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/sidebar.js"></script><script src="/js/next-boot.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.4.1/search.js" integrity="sha256-1kfA5uHPf65M5cphT2dvymhkuyHPQp5A53EGZOnOLmc=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+
+
+
+
+  
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 7.3.0">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha256-XOqroi11tY4EFQMR9ZYwZWKj5ZXiftSx36RRuC3anlA=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"batizhao.github.io","root":"/","images":"/images","scheme":"Pisces","darkmode":false,"version":"8.20.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"post","padding":18,"offset":12},"hljswrap":true,"copycode":{"enable":false,"style":null},"fold":{"enable":false,"height":500},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":true,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"},"path":"/search.xml","localsearch":{"enable":true,"top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="折腾了好几天，试过官方的 edX Developer Stack 和 edX Ubuntu 12.04 installation 两种方法没成功之后，终于按照 Quick Start to working with the edX Platform 这篇文章搞定，缺点就是不是最新的 edX 环境。 按照官方文档，在安装时主要会卡在两个地方（主要还是网络问题）：  安装 MongoDB（这个地方时间">
+<meta property="og:type" content="article">
+<meta property="og:title" content="edX 学习二：搭建 edX 平台">
+<meta property="og:url" content="http://batizhao.github.io/2014/04/14/quick-start-to-working-with-the-edx-platform/index.html">
+<meta property="og:site_name" content="Gunner">
+<meta property="og:description" content="折腾了好几天，试过官方的 edX Developer Stack 和 edX Ubuntu 12.04 installation 两种方法没成功之后，终于按照 Quick Start to working with the edX Platform 这篇文章搞定，缺点就是不是最新的 edX 环境。 按照官方文档，在安装时主要会卡在两个地方（主要还是网络问题）：  安装 MongoDB（这个地方时间">
+<meta property="og:locale">
+<meta property="og:image" content="http://batizhao.github.io/images/2014-04-14-quick-start-to-working-with-the-edx-platform-1.png">
+<meta property="og:image" content="http://batizhao.github.io/images/2014-04-14-quick-start-to-working-with-the-edx-platform-2.png">
+<meta property="article:published_time" content="2014-04-13T16:00:00.000Z">
+<meta property="article:modified_time" content="2024-09-11T08:18:28.524Z">
+<meta property="article:author" content="巴蒂">
+<meta property="article:tag" content="mooc">
+<meta property="article:tag" content="edx">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://batizhao.github.io/images/2014-04-14-quick-start-to-working-with-the-edx-platform-1.png">
+
+
+<link rel="canonical" href="http://batizhao.github.io/2014/04/14/quick-start-to-working-with-the-edx-platform/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-Hans","comments":true,"permalink":"http://batizhao.github.io/2014/04/14/quick-start-to-working-with-the-edx-platform/","path":"2014/04/14/quick-start-to-working-with-the-edx-platform/","title":"edX 学习二：搭建 edX 平台"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>edX 学习二：搭建 edX 平台 | Gunner</title>
+  
+
+  <script src="/js/third-party/analytics/baidu-analytics.js"></script>
+  <script async src="https://hm.baidu.com/hm.js?4e3ffdab4387b8ef0d7c7c587e39xxxx"></script>
+
+
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+<link rel="alternate" href="/atom.xml" title="Gunner" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">Gunner</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="Search" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>Search
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="Searching..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8-MITxVM-distribution-%E5%AE%89%E8%A3%85"><span class="nav-number">1.</span> <span class="nav-text">使用 MITxVM distribution 安装</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-%E5%AE%89%E8%A3%85-Vagrant-%E5%92%8C-VirtualBox"><span class="nav-number">1.1.</span> <span class="nav-text">1. 安装 Vagrant 和 VirtualBox</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-%E4%B8%8B%E8%BD%BD%E7%A4%BA%E4%BE%8B%E8%AF%BE%E7%A8%8B-edx4edx-lite-%E5%88%B0-data-%E7%9B%AE%E5%BD%95"><span class="nav-number">1.2.</span> <span class="nav-text">2. 下载示例课程 edx4edx_lite 到 data 目录</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-%E5%9C%A8-mitx-vagrant-%E5%90%AF%E5%8A%A8%E8%99%9A%E6%8B%9F%E6%9C%BA%E3%80%82"><span class="nav-number">1.3.</span> <span class="nav-text">3. 在 mitx-vagrant 启动虚拟机。</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-%E8%AE%BF%E9%97%AE%E7%AB%99%E7%82%B9"><span class="nav-number">1.4.</span> <span class="nav-text">4. 访问站点</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-%E8%99%9A%E6%8B%9F%E6%9C%BA%E7%AE%A1%E7%90%86"><span class="nav-number">1.5.</span> <span class="nav-text">5. 虚拟机管理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-%E9%97%AE%E9%A2%98"><span class="nav-number">1.6.</span> <span class="nav-text">5. 问题</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">巴蒂</p>
+  <div class="site-description" itemprop="description">心中总有个梦想，想英雄一样地走过这世界。</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">59</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">12</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">40</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/batizhao" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;batizhao" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:zhaobati@gmail.com" title="E-Mail → mailto:zhaobati@gmail.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="http://batizhao.github.io/2014/04/14/quick-start-to-working-with-the-edx-platform/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="巴蒂">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Gunner">
+      <meta itemprop="description" content="心中总有个梦想，想英雄一样地走过这世界。">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="edX 学习二：搭建 edX 平台 | Gunner">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          edX 学习二：搭建 edX 平台
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2014-04-14 00:00:00" itemprop="dateCreated datePublished" datetime="2014-04-14T00:00:00+08:00">2014-04-14</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">Edited on</span>
+      <time title="Modified: 2024-09-11 16:18:28" itemprop="dateModified" datetime="2024-09-11T16:18:28+08:00">2024-09-11</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/mooc/" itemprop="url" rel="index"><span itemprop="name">mooc</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="Views" id="busuanzi_container_page_pv">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">Views: </span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>折腾了好几天，试过官方的 <a href="https://github.com/edx/configuration/wiki/edX-Developer-Stack">edX Developer Stack</a> 和 <a href="https://github.com/edx/configuration/wiki/edX-Ubuntu-12.04-Installation">edX Ubuntu 12.04 installation</a> 两种方法没成功之后，终于按照 <a href="https://people.csail.mit.edu/ichuang/edx">Quick Start to working with the edX Platform</a> 这篇文章搞定，缺点就是不是最新的 edX 环境。</p>
+<p>按照官方文档，在安装时主要会卡在两个地方（主要还是网络问题）：</p>
+<ul>
+<li>安装 MongoDB（这个地方时间长点还可以执行下去，大概 10 几个小时）</li>
+</ul>
+<p><img src="/images/2014-04-14-quick-start-to-working-with-the-edx-platform-1.png"></p>
+<ul>
+<li>安装 ORA（花了一天一夜也没执行下去）</li>
+</ul>
+<p><img src="/images/2014-04-14-quick-start-to-working-with-the-edx-platform-2.png"></p>
+<p>最后这两种方法都放弃，使用了直接下载 box 的方式。就是 box 文件下载需要点时间，我家里 20M 光纤用了 4 个小时左右。</p>
+<span id="more"></span>
+
+<h1 id="使用-MITxVM-distribution-安装"><a href="#使用-MITxVM-distribution-安装" class="headerlink" title="使用 MITxVM distribution 安装"></a>使用 MITxVM distribution 安装</h1><p>The MITxVM box is built on a base Ubuntu 12.04LTS distribution. The edX platform runs using django&#x2F;python, and is served via gunicorn and nginx. Virtual Box is used to provide a host-only network, 192.168.42.*. The four edX services listen on eth0 on four separate IP addresses. The system uses mysql for the main database, and mongo for Studio.		</p>
+<p>Installed repos include edx-platform, xqueue, xserver, latex2edx, edx-ora, ease.</p>
+<h2 id="1-安装-Vagrant-和-VirtualBox"><a href="#1-安装-Vagrant-和-VirtualBox" class="headerlink" title="1. 安装 Vagrant 和 VirtualBox"></a>1. 安装 Vagrant 和 VirtualBox</h2><ul>
+<li><a href="http://www.vagrantup.com/">Vagrant</a></li>
+<li><a href="https://www.virtualbox.org/">VirtualBox</a></li>
+</ul>
+<h2 id="2-下载示例课程-edx4edx-lite-到-data-目录"><a href="#2-下载示例课程-edx4edx-lite-到-data-目录" class="headerlink" title="2. 下载示例课程 edx4edx_lite 到 data 目录"></a>2. 下载示例课程 edx4edx_lite 到 data 目录</h2><pre><code># mkdir mitx-vagrant
+# cd mitx-vagrant
+# mkdir data
+# cd data
+# git clone https://github.com/mitocw/edx4edx_lite.git
+</code></pre>
+<h2 id="3-在-mitx-vagrant-启动虚拟机。"><a href="#3-在-mitx-vagrant-启动虚拟机。" class="headerlink" title="3. 在 mitx-vagrant 启动虚拟机。"></a>3. 在 mitx-vagrant 启动虚拟机。</h2><p>下载 <a href="https://people.csail.mit.edu/ichuang/edx/download.php?file=mitxvm-edx-platform-02sep13a.box">mitxvm-edx-platform-02sep13a.box</a> (large file: 3.8 GB) </p>
+<blockquote>
+<p>md5sum: 7d3671a92f8ba4f8e6b54db91a90bc91</p>
+</blockquote>
+<pre><code># vagrant init mitxvm mitxvm-edx-platform-02sep13a.box 
+# vagrant up
+
+...
+==&gt; default: Configuring and enabling network interfaces...
+==&gt; default: Mounting shared folders...
+    default: /vagrant =&gt; /opt/mitx-vagrant
+==&gt; default: VM already provisioned. Run `vagrant provision` or use `--provision` to force it	
+</code></pre>
+<h2 id="4-访问站点"><a href="#4-访问站点" class="headerlink" title="4. 访问站点"></a>4. 访问站点</h2><ul>
+<li><a href="http://192.168.42.2/">http://192.168.42.2</a> – LMS（<a href="http://www.edx.org,这个环境没有找到/">www.edx.org，这个环境没有找到</a> studio.edx.org 对应的站点）</li>
+<li><a href="http://192.168.42.2/admin">http://192.168.42.2/admin</a> – LMS 后台管理，需要通过下边的 setstaff 命令激活访问账号</li>
+<li><a href="http://192.168.42.5/">http://192.168.42.5</a> – Edge（edge.edx.org）</li>
+<li><a href="http://192.168.42.3/">http://192.168.42.3</a> – Edge Studio (studio.edge.edx.org) </li>
+<li><a href="http://192.168.42.4/">http://192.168.42.4</a> – Preview</li>
+</ul>
+<p>	</p>
+<p>登录账号: </p>
+<ul>
+<li>email “<a href="mailto:&#120;&#97;&#100;&#109;&#x69;&#110;&#64;&#x6d;&#105;&#116;&#x78;&#118;&#x6d;&#x2e;&#x6c;&#111;&#99;&#97;&#108;">&#120;&#97;&#100;&#109;&#x69;&#110;&#64;&#x6d;&#105;&#116;&#x78;&#118;&#x6d;&#x2e;&#x6c;&#111;&#99;&#97;&#108;</a>“，password “xadmin”。</li>
+<li>如果要创建用户，激活用户需要使用 “xmanage” 命令，否则无法收到激活邮件。</li>
+<li>登录以后，可以看到 edx4edx_lite 这个示例课程。</li>
+</ul>
+<h2 id="5-虚拟机管理"><a href="#5-虚拟机管理" class="headerlink" title="5. 虚拟机管理"></a>5. 虚拟机管理</h2><p>MITx virtual machine Vagrant box 使用 <a href="https://github.com/mitocw/xmanage">xmanage</a>：</p>
+<pre><code># vagrant ssh -- xmanage help
+
+ommands available:
+
+restart-lms      - restart the LMS (for vagrant boxes, running at http://192.168.42.2)
+                   This will force re-loading of course data
+restart-cms      - restart the CMS (aka the Studio system)
+restart-edge     - restart the Edge server (part of the Studio system)
+restart-preview  - restart the Preview server (part of the Studio system)
+
+restart-xqueue   - restart the xqueue main system
+restart-consumer - restart the xqueue consumer
+restart-xserver  - restart the xserver (python code grader)
+
+logs &lt;appname&gt;   - view last 100 lines of log file for &lt;appname&gt;
+                   appname should be one of lms, cms, edge, preview, xserver, xqueue
+
+activate &lt;user&gt;  - activate user specified by username &lt;user&gt;
+setstaff &lt;user&gt;  - make user (specified by username &lt;user&gt;) into staff
+
+update-mitx      - update mitx system code (use with care!)
+update           - update this management script (from central repo)
+help             - print out this message, as well as local NOTES.txt file
+            
+</code></pre>
+<h2 id="5-问题"><a href="#5-问题" class="headerlink" title="5. 问题"></a>5. 问题</h2><ul>
+<li><p>Vagrant error : Failed to mount folders in Linux guest</p>
+<pre><code>  # vagrant ssh
+  # sudo ln -s /opt/VBoxGuestAdditions-4.3.10/lib/VBoxGuestAdditions /usr/lib/VBoxGuestAdditions
+  # vagrant reload
+  
+</code></pre>
+</li>
+<li><p>Unknown command: ‘activate_user’		</p>
+<p>  这里发现 xmanage activate 命令不可用，其它命令正常。在 <a href="https://groups.google.com/forum/#!topic/edx-code/mmFqv6688GQ">Google Groups</a> 上看到这个问题，但没解决。如果遇到以下错误，这里可以通过 admin 登录来激活。</p>
+<pre><code>  $ xmanage activate batizhao
+  activating user batizhao
+  Unknown command: &#39;activate_user&#39;
+  Type &#39;django-admin.py help&#39; for usage.
+  To complete the activation, please logout then log back in
+</code></pre>
+</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="followme">
+  <span>Welcome to my other publishing channels</span>
+
+  <div class="social-list">
+
+      <div class="social-item">
+          <a target="_blank" class="social-link" href="/atom.xml">
+            <span class="icon">
+              <i class="fa fa-rss"></i>
+            </span>
+
+            <span class="label">RSS</span>
+          </a>
+      </div>
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/mooc/" rel="tag"># mooc</a>
+              <a href="/tags/edx/" rel="tag"># edx</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2014/04/11/learning-edx-one/" rel="prev" title="edX 学习一：了解 edX 相关组件">
+                  <i class="fa fa-angle-left"></i> edX 学习一：了解 edX 相关组件
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2014/04/15/edx-course-management/" rel="next" title="edX 学习三：开始课程制作之前">
+                  edX 学习三：开始课程制作之前 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2024</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">巴蒂</span>
+  </div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="Total Visitors">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="Total Views">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/pisces/" rel="noopener" target="_blank">NexT.Pisces</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="Back to top">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pangu/4.0.7/pangu.min.js" integrity="sha256-j+yj56cdEY2CwkVtGyz18fNybFGpMGJ8JxG3GSyO2+I=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/sidebar.js"></script><script src="/js/next-boot.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.4.1/search.js" integrity="sha256-1kfA5uHPf65M5cphT2dvymhkuyHPQp5A53EGZOnOLmc=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+
+
+
+
+  
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+
+</body>
+</html>

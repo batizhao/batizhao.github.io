@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 7.3.0">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha256-XOqroi11tY4EFQMR9ZYwZWKj5ZXiftSx36RRuC3anlA=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"batizhao.github.io","root":"/","images":"/images","scheme":"Pisces","darkmode":false,"version":"8.20.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"post","padding":18,"offset":12},"hljswrap":true,"copycode":{"enable":false,"style":null},"fold":{"enable":false,"height":500},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":true,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"},"path":"/search.xml","localsearch":{"enable":true,"top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="1. 安装 libevent# yum list|grep libevent*  libevent.x86_64                        1.4.13-4.el6                      libevent.i686                          1.4.13-4.el6                       libevent-dev">
+<meta property="og:type" content="article">
+<meta property="og:title" content="在 CentOS6 上安装 memcached">
+<meta property="og:url" content="http://batizhao.github.io/2012/09/07/install-memcached-on-centos6/index.html">
+<meta property="og:site_name" content="Gunner">
+<meta property="og:description" content="1. 安装 libevent# yum list|grep libevent*  libevent.x86_64                        1.4.13-4.el6                      libevent.i686                          1.4.13-4.el6                       libevent-dev">
+<meta property="og:locale">
+<meta property="article:published_time" content="2012-09-06T16:00:00.000Z">
+<meta property="article:modified_time" content="2024-09-11T08:18:28.523Z">
+<meta property="article:author" content="巴蒂">
+<meta property="article:tag" content="linux">
+<meta property="article:tag" content="memcached">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="http://batizhao.github.io/2012/09/07/install-memcached-on-centos6/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-Hans","comments":true,"permalink":"http://batizhao.github.io/2012/09/07/install-memcached-on-centos6/","path":"2012/09/07/install-memcached-on-centos6/","title":"在 CentOS6 上安装 memcached"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>在 CentOS6 上安装 memcached | Gunner</title>
+  
+
+  <script src="/js/third-party/analytics/baidu-analytics.js"></script>
+  <script async src="https://hm.baidu.com/hm.js?4e3ffdab4387b8ef0d7c7c587e39xxxx"></script>
+
+
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+<link rel="alternate" href="/atom.xml" title="Gunner" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">Gunner</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="Search" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>Search
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="Searching..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-%E5%AE%89%E8%A3%85-libevent"><span class="nav-number">1.</span> <span class="nav-text">1. 安装 libevent</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-%E5%AE%89%E8%A3%85-memcached"><span class="nav-number">2.</span> <span class="nav-text">2. 安装 memcached</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-%E4%BD%BF%E7%94%A8-memcached"><span class="nav-number">3.</span> <span class="nav-text">3. 使用 memcached</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">巴蒂</p>
+  <div class="site-description" itemprop="description">心中总有个梦想，想英雄一样地走过这世界。</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">59</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">12</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">40</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/batizhao" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;batizhao" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:zhaobati@gmail.com" title="E-Mail → mailto:zhaobati@gmail.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="http://batizhao.github.io/2012/09/07/install-memcached-on-centos6/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="巴蒂">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Gunner">
+      <meta itemprop="description" content="心中总有个梦想，想英雄一样地走过这世界。">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="在 CentOS6 上安装 memcached | Gunner">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          在 CentOS6 上安装 memcached
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2012-09-07 00:00:00" itemprop="dateCreated datePublished" datetime="2012-09-07T00:00:00+08:00">2012-09-07</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">Edited on</span>
+      <time title="Modified: 2024-09-11 16:18:28" itemprop="dateModified" datetime="2024-09-11T16:18:28+08:00">2024-09-11</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/memcached/" itemprop="url" rel="index"><span itemprop="name">memcached</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="Views" id="busuanzi_container_page_pv">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">Views: </span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><h1 id="1-安装-libevent"><a href="#1-安装-libevent" class="headerlink" title="1. 安装 libevent"></a>1. 安装 libevent</h1><pre><code># yum list|grep libevent*
+
+libevent.x86_64                        1.4.13-4.el6                     
+libevent.i686                          1.4.13-4.el6                      
+libevent-devel.i686                    1.4.13-4.el6                         
+libevent-devel.x86_64                  1.4.13-4.el6                        
+libevent-doc.noarch                    1.4.13-4.el6                        
+libevent-headers.noarch                1.4.13-4.el6                     
+
+# yum install libevent.x86_64 libevent-devel.x86_64
+</code></pre>
+<span id="more"></span>
+<h1 id="2-安装-memcached"><a href="#2-安装-memcached" class="headerlink" title="2. 安装 memcached"></a>2. 安装 memcached</h1><pre><code># wget http://memcached.googlecode.com/files/memcached-1.4.15.tar.gz
+# tar zxvf memcached-1.4.15.tar.gz
+# cd memcached-1.4.15
+# ./configure
+# make
+# make install
+</code></pre>
+<h1 id="3-使用-memcached"><a href="#3-使用-memcached" class="headerlink" title="3. 使用 memcached"></a>3. 使用 memcached</h1><p>参数</p>
+<pre><code>-p 监听端口
+-l 连接的IP地址,默认是本机
+-d start 启动 memecached 服务
+-d restart 重启
+-d stop|shutdown关闭服务
+-d install 安装
+-d uninstall 卸载
+-u 以身份运行仅在 root 下有效
+-m 最大内存使用，单位 MB，默认 64MB
+-M 内存耗尽时返回错误
+-c 最大同时连接数量,默认是 1024
+-f 块大小增长因为,默认是 1.25
+-n 最小分配空间, key + value + flags 默认48
+-h 显示帮助
+</code></pre>
+<p>启动</p>
+<pre><code># memcached -d -u root
+</code></pre>
+<p>验证</p>
+<pre><code>＃ telnet localhost 11211
+Trying ::1...
+Connected to localhost.
+Escape character is &#39;^]&#39;.
+</code></pre>
+<p>查看当前状态</p>
+<pre><code>＃ stats
+TAT pid 26427
+STAT uptime 2137
+STAT time 1346995532
+STAT version 1.4.15
+STAT libevent 1.4.13-stable
+STAT pointer_size 64
+STAT rusage_user 0.012998
+STAT rusage_system 0.023996
+STAT curr_connections 10
+STAT total_connections 14
+STAT connection_structures 12
+STAT reserved_fds 20
+STAT cmd_get 0
+STAT cmd_set 0
+STAT cmd_flush 0
+STAT cmd_touch 0
+STAT get_hits 0
+STAT get_misses 0
+STAT delete_misses 0
+STAT delete_hits 0
+STAT incr_misses 0
+STAT incr_hits 0
+STAT decr_misses 0
+STAT decr_hits 0
+STAT cas_misses 0
+STAT cas_hits 0
+STAT cas_badval 0
+STAT touch_hits 0
+STAT touch_misses 0
+STAT auth_cmds 0
+STAT auth_errors 0
+STAT bytes_read 68
+STAT bytes_written 2091
+STAT limit_maxbytes 67108864
+STAT accepting_conns 1
+STAT listen_disabled_num 0
+STAT threads 4
+STAT conn_yields 0
+STAT hash_power_level 16
+STAT hash_bytes 524288
+STAT hash_is_expanding 0
+STAT bytes 0
+STAT curr_items 0
+STAT total_items 0
+STAT expired_unfetched 0
+STAT evicted_unfetched 0
+STAT evictions 0
+STAT reclaimed 0
+END
+</code></pre>
+<p>远程使用需要打开 iptables 端口</p>
+<pre><code># vim /etc/sysconfig/iptables
+----
+-A INPUT -m state --state NEW -m tcp -p tcp --dport 11211 -j ACCEPT
+-A INPUT -m state --state NEW -m udp -p udp --dport 11211 -j ACCEPT  
+
+# service iptables restart   
+</code></pre>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="followme">
+  <span>Welcome to my other publishing channels</span>
+
+  <div class="social-list">
+
+      <div class="social-item">
+          <a target="_blank" class="social-link" href="/atom.xml">
+            <span class="icon">
+              <i class="fa fa-rss"></i>
+            </span>
+
+            <span class="label">RSS</span>
+          </a>
+      </div>
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/linux/" rel="tag"># linux</a>
+              <a href="/tags/memcached/" rel="tag"># memcached</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2012/08/22/maven-package/" rel="prev" title="Maven 自动化构建（dev, test, prod）">
+                  <i class="fa fa-angle-left"></i> Maven 自动化构建（dev, test, prod）
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2012/09/17/install-vsftpd-on-centos6/" rel="next" title="在 CentOS6 上安装 vsftpd">
+                  在 CentOS6 上安装 vsftpd <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2024</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">巴蒂</span>
+  </div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="Total Visitors">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="Total Views">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/pisces/" rel="noopener" target="_blank">NexT.Pisces</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="Back to top">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pangu/4.0.7/pangu.min.js" integrity="sha256-j+yj56cdEY2CwkVtGyz18fNybFGpMGJ8JxG3GSyO2+I=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/sidebar.js"></script><script src="/js/next-boot.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.4.1/search.js" integrity="sha256-1kfA5uHPf65M5cphT2dvymhkuyHPQp5A53EGZOnOLmc=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+
+
+
+
+  
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+
+</body>
+</html>

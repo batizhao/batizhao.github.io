@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 7.3.0">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha256-XOqroi11tY4EFQMR9ZYwZWKj5ZXiftSx36RRuC3anlA=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"batizhao.github.io","root":"/","images":"/images","scheme":"Pisces","darkmode":false,"version":"8.20.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"post","padding":18,"offset":12},"hljswrap":true,"copycode":{"enable":false,"style":null},"fold":{"enable":false,"height":500},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":true,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"},"path":"/search.xml","localsearch":{"enable":true,"top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="在 Docker Compose 中，我们可以在单台机器上操作多个相关联的 Docker 容器组成负载均衡集群。那如果我们需要一个分布式的环境中，跨多台主机呢？在 Docker 1.12 以上版本中，有个新的东西叫做 Swarm Mode。不同于之前版本的 Docker Swarm（还需要 pull swarm），Swarm Mode 已经集成在 Docker Engine 中。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Docker 实战（五）：Docker Swarm Mode">
+<meta property="og:url" content="http://batizhao.github.io/2016/12/02/docker-five-swarm-mode/index.html">
+<meta property="og:site_name" content="Gunner">
+<meta property="og:description" content="在 Docker Compose 中，我们可以在单台机器上操作多个相关联的 Docker 容器组成负载均衡集群。那如果我们需要一个分布式的环境中，跨多台主机呢？在 Docker 1.12 以上版本中，有个新的东西叫做 Swarm Mode。不同于之前版本的 Docker Swarm（还需要 pull swarm），Swarm Mode 已经集成在 Docker Engine 中。">
+<meta property="og:locale">
+<meta property="og:image" content="http://batizhao.github.io/images/ingress-routing-mesh.png">
+<meta property="og:image" content="http://batizhao.github.io/images/ingress-lb.png">
+<meta property="article:published_time" content="2016-12-01T23:39:15.000Z">
+<meta property="article:modified_time" content="2024-09-11T08:18:28.525Z">
+<meta property="article:author" content="巴蒂">
+<meta property="article:tag" content="linux">
+<meta property="article:tag" content="docker">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://batizhao.github.io/images/ingress-routing-mesh.png">
+
+
+<link rel="canonical" href="http://batizhao.github.io/2016/12/02/docker-five-swarm-mode/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-Hans","comments":true,"permalink":"http://batizhao.github.io/2016/12/02/docker-five-swarm-mode/","path":"2016/12/02/docker-five-swarm-mode/","title":"Docker 实战（五）：Docker Swarm Mode"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>Docker 实战（五）：Docker Swarm Mode | Gunner</title>
+  
+
+  <script src="/js/third-party/analytics/baidu-analytics.js"></script>
+  <script async src="https://hm.baidu.com/hm.js?4e3ffdab4387b8ef0d7c7c587e39xxxx"></script>
+
+
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+<link rel="alternate" href="/atom.xml" title="Gunner" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">Gunner</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="Search" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>Search
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="Searching..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%BB%E8%A6%81%E7%89%B9%E6%80%A7"><span class="nav-number">1.</span> <span class="nav-text">主要特性</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%86%85%E7%BD%AE%E4%BA%8E-Docker-Engine-%E7%9A%84%E9%9B%86%E7%BE%A4%E7%AE%A1%E7%90%86"><span class="nav-number">1.1.</span> <span class="nav-text">内置于 Docker Engine 的集群管理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8E%BB%E4%B8%AD%E5%BF%83%E5%8C%96%E8%AE%BE%E8%AE%A1"><span class="nav-number">1.2.</span> <span class="nav-text">去中心化设计</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A3%B0%E6%98%8E%E5%BC%8F%E6%9C%8D%E5%8A%A1%E6%A8%A1%E5%9E%8B"><span class="nav-number">1.3.</span> <span class="nav-text">声明式服务模型</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9C%8D%E5%8A%A1%E6%89%A9%E7%BC%A9"><span class="nav-number">1.4.</span> <span class="nav-text">服务扩缩</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%9B%86%E7%BE%A4%E7%8A%B6%E6%80%81%E7%BB%B4%E6%8A%A4"><span class="nav-number">1.5.</span> <span class="nav-text">集群状态维护</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%B7%A8%E4%B8%BB%E6%9C%BA%E7%BD%91%E7%BB%9C"><span class="nav-number">1.6.</span> <span class="nav-text">跨主机网络</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9C%8D%E5%8A%A1%E5%8F%91%E7%8E%B0"><span class="nav-number">1.7.</span> <span class="nav-text">服务发现</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1"><span class="nav-number">1.8.</span> <span class="nav-text">负载均衡</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%BB%98%E8%AE%A4-TLS-%E5%8A%A0%E5%AF%86"><span class="nav-number">1.9.</span> <span class="nav-text">默认 TLS 加密</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%BB%9A%E5%8A%A8%E6%9B%B4%E6%96%B0"><span class="nav-number">1.10.</span> <span class="nav-text">滚动更新</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%87%86%E5%A4%87%E4%B8%89%E5%8F%B0%E4%B8%BB%E6%9C%BA"><span class="nav-number">2.</span> <span class="nav-text">准备三台主机</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA-Swarm"><span class="nav-number">3.</span> <span class="nav-text">创建 Swarm</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%A1%AE%E8%AE%A4-manager-%E8%8A%82%E7%82%B9%E7%9A%84-ip-%E5%9C%B0%E5%9D%80"><span class="nav-number">3.1.</span> <span class="nav-text">确认 manager 节点的 ip 地址</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%9D%E5%A7%8B%E5%8C%96-swarm"><span class="nav-number">3.2.</span> <span class="nav-text">初始化 swarm</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9F%A5%E7%9C%8B-manager-token"><span class="nav-number">3.3.</span> <span class="nav-text">查看 manager token</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9F%A5%E7%9C%8B-worker-token"><span class="nav-number">3.4.</span> <span class="nav-text">查看 worker token</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9F%A5%E7%9C%8B%E8%8A%82%E7%82%B9"><span class="nav-number">3.5.</span> <span class="nav-text">查看节点</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BF%9B%E5%85%A5%E8%8A%82%E7%82%B9"><span class="nav-number">4.</span> <span class="nav-text">进入节点</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%83%A8%E7%BD%B2%E6%9C%8D%E5%8A%A1"><span class="nav-number">5.</span> <span class="nav-text">部署服务</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A3%80%E6%9F%A5%E6%9C%8D%E5%8A%A1"><span class="nav-number">6.</span> <span class="nav-text">检查服务</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9C%8D%E5%8A%A1%E6%89%A9%E5%B1%95"><span class="nav-number">7.</span> <span class="nav-text">服务扩展</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%A0%E9%99%A4%E6%9C%8D%E5%8A%A1"><span class="nav-number">8.</span> <span class="nav-text">删除服务</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%BB%9A%E5%8A%A8%E6%9B%B4%E6%96%B0-1"><span class="nav-number">9.</span> <span class="nav-text">滚动更新</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8B%89%E6%8E%89%E8%8A%82%E7%82%B9"><span class="nav-number">10.</span> <span class="nav-text">拉掉节点</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%B7%AF%E7%94%B1%E7%BD%91%E7%BB%9C-routing-mesh"><span class="nav-number">11.</span> <span class="nav-text">路由网络 routing mesh</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8F%91%E5%B8%83%E4%B8%80%E4%B8%AA%E5%AF%B9%E5%A4%96%E7%AB%AF%E5%8F%A3"><span class="nav-number">11.1.</span> <span class="nav-text">发布一个对外端口</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE%E4%B8%80%E4%B8%AA%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1%E5%99%A8"><span class="nav-number">11.2.</span> <span class="nav-text">配置一个负载均衡器</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">巴蒂</p>
+  <div class="site-description" itemprop="description">心中总有个梦想，想英雄一样地走过这世界。</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">59</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">12</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">40</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/batizhao" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;batizhao" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:zhaobati@gmail.com" title="E-Mail → mailto:zhaobati@gmail.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="http://batizhao.github.io/2016/12/02/docker-five-swarm-mode/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="巴蒂">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Gunner">
+      <meta itemprop="description" content="心中总有个梦想，想英雄一样地走过这世界。">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="Docker 实战（五）：Docker Swarm Mode | Gunner">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Docker 实战（五）：Docker Swarm Mode
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2016-12-02 07:39:15" itemprop="dateCreated datePublished" datetime="2016-12-02T07:39:15+08:00">2016-12-02</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">Edited on</span>
+      <time title="Modified: 2024-09-11 16:18:28" itemprop="dateModified" datetime="2024-09-11T16:18:28+08:00">2024-09-11</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/docker/" itemprop="url" rel="index"><span itemprop="name">docker</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="Views" id="busuanzi_container_page_pv">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">Views: </span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>在 <a href="http://batizhao.github.io/2016/12/01/docker-four-docker-compose/">Docker Compose</a> 中，我们可以在单台机器上操作多个相关联的 Docker 容器组成负载均衡集群。<br>那如果我们需要一个分布式的环境中，跨多台主机呢？<br>在 Docker 1.12 以上版本中，有个新的东西叫做 <a href="https://docs.docker.com/engine/swarm/">Swarm Mode</a>。<br>不同于之前版本的 <a href="https://docs.docker.com/swarm/">Docker Swarm</a>（还需要 pull swarm），Swarm Mode 已经集成在 Docker Engine 中。</p>
+<span id="more"></span>
+
+<h2 id="主要特性"><a href="#主要特性" class="headerlink" title="主要特性"></a>主要特性</h2><h3 id="内置于-Docker-Engine-的集群管理"><a href="#内置于-Docker-Engine-的集群管理" class="headerlink" title="内置于 Docker Engine 的集群管理"></a>内置于 Docker Engine 的集群管理</h3><p>可以直接用 Docker Engine CLI 来创建 Swarm 集群，并在该集群上部署服务。你不再需要额外的编排软件来创建或管理 Swarm 集群了。</p>
+<h3 id="去中心化设计"><a href="#去中心化设计" class="headerlink" title="去中心化设计"></a>去中心化设计</h3><p>不同于在部署时就确定节点之间的关系, 新的 Swarm 模式选择在运行时动态地处理这些关系, 你可以用 Docker Engine 部署 manager 和 worker 这两种不同的节点。 这意味着你可以从一个磁盘镜像搭建整个 Swarm 。</p>
+<h3 id="声明式服务模型"><a href="#声明式服务模型" class="headerlink" title="声明式服务模型"></a>声明式服务模型</h3><p>Docker Engine 使用一种声明式方法来定义各种服务的状态。譬如，你可以描述一个由 web 前端服务，消息队列服务和数据库后台组成的应用。</p>
+<h3 id="服务扩缩"><a href="#服务扩缩" class="headerlink" title="服务扩缩"></a>服务扩缩</h3><p>你可以通过 docker service scale 命令轻松地增加或减少某个服务的任务数。</p>
+<h3 id="集群状态维护"><a href="#集群状态维护" class="headerlink" title="集群状态维护"></a>集群状态维护</h3><p>Swarm 管理节点会一直监控集群状态，并依据你给出的期望状态与集群真实状态间的区别来进行调节。譬如，你为一个服务设置了10个任务副本，如果某台运行着该服务两个副本的工作节点停止工作了，管理节点会创建两个新的副本来替掉上述异常终止的副本。 Swarm 管理节点这个新的副本分配到了正常运行的工作节点上。</p>
+<h3 id="跨主机网络"><a href="#跨主机网络" class="headerlink" title="跨主机网络"></a>跨主机网络</h3><p>你可以为你的服务指定一个 overlay 网络。在服务初始化或着更新时，Swarm 管理节点自动的为容器在 overlay 网络上分配地址。</p>
+<h3 id="服务发现"><a href="#服务发现" class="headerlink" title="服务发现"></a>服务发现</h3><p>Swarm 管理节点在集群中自动的为每个服务分配唯一的 DNS name 并为容器配置负载均衡。利用内嵌在 Swarm 中的 DNS 服务器你可以找到每个运行在集群中的容器。</p>
+<h3 id="负载均衡"><a href="#负载均衡" class="headerlink" title="负载均衡"></a>负载均衡</h3><p>你可以把服务的端口暴露给一个集群外部的负载均衡器。 在 Swarm 集群内部你可以决定如何在节点间分发服务的容器。</p>
+<h3 id="默认-TLS-加密"><a href="#默认-TLS-加密" class="headerlink" title="默认 TLS 加密"></a>默认 TLS 加密</h3><p>Swarm 集群中的节点间通信是强制加密的。你可以选择使用自签名的根证书或者来自第三方认证的证书。</p>
+<h3 id="滚动更新"><a href="#滚动更新" class="headerlink" title="滚动更新"></a>滚动更新</h3><p>docker service 允许你自定义更新的间隔时间, 并依次更新你的容器, docker 会按照你设置的更新时间依次更新你的容器, 如果发生了错误, 还可以回滚到之前的状态。</p>
+<blockquote><footer><strong>原文链接</strong><cite><a href="https://dataman.gitbooks.io/crane/content/overview/Introduction-of-Docker-Swarm-Mode.html">Swarm 模式</a></cite></footer></blockquote>
+
+<h2 id="准备三台主机"><a href="#准备三台主机" class="headerlink" title="准备三台主机"></a>准备三台主机</h2><p>你可以找三台物理主机，如果在单机环境做测试，可以使用 Docker Machine 创建三台 Docker 主机 manager、worker1、worker2。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ docker-machine create -d virtualbox manager</span><br><span class="line">$ docker-machine create -d virtualbox worker1</span><br><span class="line">$ docker-machine create -d virtualbox worker2</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>在 Docker for Mac 中，已经不需要 VirtualBox，而是使用 HyperKit，所以这里需要先安装最新版本的 VirtualBox。</p>
+</blockquote>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">$ docker-machine <span class="built_in">ls</span></span><br><span class="line">NAME      ACTIVE   DRIVER       STATE     URL                         SWARM   DOCKER    ERRORS</span><br><span class="line">manager   -        virtualbox   Running   tcp://192.168.99.101:2376           v1.12.3</span><br><span class="line">worker1   -        virtualbox   Running   tcp://192.168.99.102:2376           v1.12.3</span><br><span class="line">worker2   *        virtualbox   Running   tcp://192.168.99.103:2376           v1.12.3</span><br></pre></td></tr></table></figure>
+
+<h2 id="创建-Swarm"><a href="#创建-Swarm" class="headerlink" title="创建 Swarm"></a>创建 Swarm</h2><h3 id="确认-manager-节点的-ip-地址"><a href="#确认-manager-节点的-ip-地址" class="headerlink" title="确认 manager 节点的 ip 地址"></a>确认 manager 节点的 ip 地址</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ docker-machine ip manager</span><br><span class="line">192.168.99.101</span><br></pre></td></tr></table></figure>
+
+<h3 id="初始化-swarm"><a href="#初始化-swarm" class="headerlink" title="初始化 swarm"></a>初始化 swarm</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">$ docker swarm init --advertise-addr 192.168.99.101</span><br><span class="line">Swarm initialized: current node (3pniknvvlt9hb5bjpdnwkp5zr) is now a manager.</span><br><span class="line"></span><br><span class="line">To add a worker to this swarm, run the following <span class="built_in">command</span>:</span><br><span class="line"></span><br><span class="line">    docker swarm <span class="built_in">join</span> \</span><br><span class="line">    --token SWMTKN-1-3gxjh13dqeabze16assdjhng71gy4x7pvu2lqh8fdj22ttg02d-dnkw6tbxbh6so5f0ng7ukiysb \</span><br><span class="line">    192.168.99.101:2377</span><br><span class="line"></span><br><span class="line">To add a manager to this swarm, run <span class="string">&#x27;docker swarm join-token manager&#x27;</span> and follow the instructions.</span><br></pre></td></tr></table></figure>
+
+<h3 id="查看-manager-token"><a href="#查看-manager-token" class="headerlink" title="查看 manager token"></a>查看 manager token</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">$ docker swarm join-token manager</span><br><span class="line">To add a manager to this swarm, run the following <span class="built_in">command</span>:</span><br><span class="line"></span><br><span class="line">    docker swarm <span class="built_in">join</span> \</span><br><span class="line">    --token SWMTKN-1-3gxjh13dqeabze16assdjhng71gy4x7pvu2lqh8fdj22ttg02d-dnkw6tbxbh6so5f0ng7ukiysb \</span><br><span class="line">    192.168.99.101:2377</span><br></pre></td></tr></table></figure>
+
+<h3 id="查看-worker-token"><a href="#查看-worker-token" class="headerlink" title="查看 worker token"></a>查看 worker token</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">$ docker swarm join-token worker</span><br><span class="line">To add a worker to this swarm, run the following <span class="built_in">command</span>:</span><br><span class="line"></span><br><span class="line">    docker swarm <span class="built_in">join</span> \</span><br><span class="line">    --token SWMTKN-1-3gxjh13dqeabze16assdjhng71gy4x7pvu2lqh8fdj22ttg02d-buqlcaugygyzizgewblrfdqr3 \</span><br><span class="line">    192.168.99.101:2377</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>这里可以自由选择 manager 还是 worker 类型的节点，示例中以 worker 为例。</p>
+</blockquote>
+<h3 id="查看节点"><a href="#查看节点" class="headerlink" title="查看节点"></a>查看节点</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ docker node <span class="built_in">ls</span></span><br><span class="line">ID                           HOSTNAME  STATUS  AVAILABILITY  MANAGER STATUS</span><br><span class="line">3pniknvvlt9hb5bjpdnwkp5zr *  manager   Ready   Active        Leader</span><br></pre></td></tr></table></figure>
+
+<h2 id="进入节点"><a href="#进入节点" class="headerlink" title="进入节点"></a>进入节点</h2><p>这里有 2 种办法进入 worker1，先新开一个终端窗口</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">eval</span> $(docker-machine <span class="built_in">env</span> worker1)</span><br></pre></td></tr></table></figure>
+
+<p>或者</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ docker-machine ssh worker1</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>这里建议打开 3 个终端窗口，分别执行 $ eval $(docker-machine env <MACHINE-NAME>) 进入 manager、worker1、worker2 三台主机。</p>
+</blockquote>
+<p>进入 worker1 后执行 <strong>查看 worker token</strong> 下的那段命令</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ docker swarm <span class="built_in">join</span> \</span><br><span class="line">  --token SWMTKN-1-3gxjh13dqeabze16assdjhng71gy4x7pvu2lqh8fdj22ttg02d-buqlcaugygyzizgewblrfdqr3 \</span><br><span class="line">  192.168.99.101:2377  </span><br></pre></td></tr></table></figure>
+
+<p>同样的方式进入 worker2 执行上述相同的命令。</p>
+<p>回到 manager 查看节点</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">$ docker node <span class="built_in">ls</span></span><br><span class="line">ID                           HOSTNAME  STATUS  AVAILABILITY  MANAGER STATUS</span><br><span class="line">1s6uw7ew22xhvy5trv2ejnncd    worker2   Ready   Active</span><br><span class="line">3pniknvvlt9hb5bjpdnwkp5zr *  manager   Ready   Active        Leader</span><br><span class="line">beh2b7riuqv7oz5nhbhuvmr0t    worker1   Ready   Active</span><br></pre></td></tr></table></figure>
+
+<h2 id="部署服务"><a href="#部署服务" class="headerlink" title="部署服务"></a>部署服务</h2><p>在创建 3 个节点完成后，现在可以在上边部署服务。<br>现在还是回到 manager 节点</p>
+<p>创建服务</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ docker service create --replicas 1 --name helloworld alpine ping docker.com</span><br><span class="line">doq2uzfwm3c5fukhksv50ewsf</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p><strong>name</strong> 指定容器名字<br><strong>replicas</strong> 只复制一个实例<br><strong>alpine</strong> ping docker.com 定义一个 Alpine Linux container 并执行 ping docker.com 命令。</p>
+</blockquote>
+<p>查看服务实例</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ docker service <span class="built_in">ls</span></span><br><span class="line">ID            NAME        REPLICAS  IMAGE        COMMAND</span><br><span class="line">doq2uzfwm3c5  helloworld  1/1       alpine       ping docker.com</span><br></pre></td></tr></table></figure>
+
+<h2 id="检查服务"><a href="#检查服务" class="headerlink" title="检查服务"></a>检查服务</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">$ docker service inspect --pretty helloworld</span><br><span class="line">ID:		doq2uzfwm3c5fukhksv50ewsf</span><br><span class="line">Name:		helloworld</span><br><span class="line">Mode:		Replicated</span><br><span class="line"> Replicas:	1</span><br><span class="line">Placement:</span><br><span class="line">UpdateConfig:</span><br><span class="line"> Parallelism:	1</span><br><span class="line"> On failure:	pause</span><br><span class="line">ContainerSpec:</span><br><span class="line"> Image:		alpine</span><br><span class="line"> Args:		ping docker.com</span><br><span class="line">Resources:</span><br></pre></td></tr></table></figure>
+
+<p>查看服务运行在哪个节点</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ docker service ps helloworld</span><br><span class="line">ID                         NAME          IMAGE   NODE     DESIRED STATE  CURRENT STATE          ERROR</span><br><span class="line">c81lt2t8ride9ioduqv86i0v7  helloworld.1  alpine  manager  Running        Running 7 minutes ago</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>这里要关注 DESIRED STATE 和 LAST STATE 两个状态。</p>
+</blockquote>
+<p>在服务所在节点查看进程，这里是 manager</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ docker ps</span><br><span class="line">CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS              PORTS               NAMES</span><br><span class="line">458df9db3e9a        alpine:latest       <span class="string">&quot;ping docker.com&quot;</span>        10 minutes ago      Up 10 minutes                           helloworld.1.c81lt2t8ride9ioduqv86i0v7</span><br></pre></td></tr></table></figure>
+
+<h2 id="服务扩展"><a href="#服务扩展" class="headerlink" title="服务扩展"></a>服务扩展</h2><p>还在是 manager 节点，通过命令，我们可以改变集群中的节点实例。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ docker service scale &lt;SERVICE-ID&gt;=&lt;NUMBER-OF-TASKS&gt;</span><br></pre></td></tr></table></figure>
+
+<p>在这里，我们把 helloworld 实例扩展到 5 个</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ docker service scale helloworld=5</span><br><span class="line">helloworld scaled to 5</span><br></pre></td></tr></table></figure>
+
+<p>查看服务实例运行节点分布</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">$ docker service ps helloworld</span><br><span class="line">ID                         NAME          IMAGE   NODE     DESIRED STATE  CURRENT STATE           ERROR</span><br><span class="line">c81lt2t8ride9ioduqv86i0v7  helloworld.1  alpine  manager  Running        Running 20 minutes ago</span><br><span class="line">b98r4ypet6b9doiof1bb0aq68  helloworld.2  alpine  worker1  Running        Running 5 seconds ago</span><br><span class="line">20hkvi1i3ihur0x17a989qvpy  helloworld.3  alpine  manager  Running        Running 8 seconds ago</span><br><span class="line">472p0ykqnwtjvmo10bx1kutz8  helloworld.4  alpine  worker2  Running        Running 2 seconds ago</span><br><span class="line">dfmx6i4aunk27m8xstavncwxa  helloworld.5  alpine  worker1  Running        Running 2 seconds ago</span><br></pre></td></tr></table></figure>
+
+<p>可以看到，manager 和 worker1 有 2 个实例，worker2 有 1 个实例。</p>
+<p>到 manager 上执行</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">$ docker ps</span><br><span class="line">CONTAINER ID        IMAGE               COMMAND                  CREATED              STATUS              PORTS               NAMES</span><br><span class="line">e90f1e77d7aa        alpine:latest       <span class="string">&quot;ping docker.com&quot;</span>        About a minute ago   Up About a minute                       helloworld.3.20hkvi1i3ihur0x17a989qvpy</span><br><span class="line">458df9db3e9a        alpine:latest       <span class="string">&quot;ping docker.com&quot;</span>        22 minutes ago       Up 22 minutes                           helloworld.1.c81lt2t8ride9ioduqv86i0v7</span><br></pre></td></tr></table></figure>
+
+<p>到 worker1 上执行</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">$ docker ps</span><br><span class="line">CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS              PORTS               NAMES</span><br><span class="line">806eb838fd86        alpine:latest       <span class="string">&quot;ping docker.com&quot;</span>        2 minutes ago       Up 2 minutes                            helloworld.5.dfmx6i4aunk27m8xstavncwxa</span><br><span class="line">faa01a019dcf        alpine:latest       <span class="string">&quot;ping docker.com&quot;</span>        2 minutes ago       Up 2 minutes                            helloworld.2.b98r4ypet6b9doiof1bb0aq68</span><br></pre></td></tr></table></figure>
+
+<p>到 worker2 上执行</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ docker ps</span><br><span class="line">CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS              PORTS               NAMES</span><br><span class="line">f020134c72bb        alpine:latest       <span class="string">&quot;ping docker.com&quot;</span>        2 minutes ago       Up 2 minutes                            helloworld.4.472p0ykqnwtjvmo10bx1kutz8</span><br></pre></td></tr></table></figure>
+
+<h2 id="删除服务"><a href="#删除服务" class="headerlink" title="删除服务"></a>删除服务</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ docker service <span class="built_in">rm</span> helloworld</span><br></pre></td></tr></table></figure>
+
+<p>确认是否删除</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ docker service inspect helloworld</span><br><span class="line">[]</span><br><span class="line">Error: no such service: helloworld</span><br></pre></td></tr></table></figure>
+
+<h2 id="滚动更新-1"><a href="#滚动更新-1" class="headerlink" title="滚动更新"></a>滚动更新</h2><p>这里我们会先部署 3 个 Redis 3.0.6 实例到 swarm 节点，然后再更新到 3.0.7。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">$ docker service create \</span><br><span class="line">  --replicas 3 \</span><br><span class="line">  --name redis \</span><br><span class="line">  --update-delay 10s \</span><br><span class="line">  redis:3.0.6</span><br><span class="line">0knduq4z4vae02wvc33vz5b0u</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p><strong>update-delay</strong> 实例之间的更新延时时间. 可以使用秒 s、分钟 m 或者 小时 h。例如 10m30s 就是延时 10分30秒。<br>默认情况同一时间更新一个实例。可以通过 <strong>–update-parallelism</strong> 配置同时更新的个数。</p>
+</blockquote>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">$ docker service ps redis</span><br><span class="line">ID                         NAME     IMAGE        NODE     DESIRED STATE  CURRENT STATE             ERROR</span><br><span class="line">27mlfg8pqlvz9w4yky1q9fxm7  redis.1  redis:3.0.6  worker1  Running        Running 2 seconds ago</span><br><span class="line">ejlctv6j92caxapd7g2bll0bo  redis.2  redis:3.0.6  manager  Running        Preparing 16 seconds ago</span><br><span class="line">3l0nu4zt99kecwig1sfie1km9  redis.3  redis:3.0.6  worker2  Running        Preparing 16 seconds ago</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>这里要关注 <strong>CURRENT STATE</strong>，上边的状态说明 worker1 实例已经 Running，但 manager 和 worker2 还在 Preparing。<br>到各自主机上用 <strong>docker ps</strong> 可以证明这一点。等待片刻，所有实例的 <strong>CURRENT STATE</strong> 都变成 Running。</p>
+</blockquote>
+<p>看最后的 Running 时间，第二个节点晚了 7 分钟，第三个节点晚了 16 分钟，三个实例全部启动成功。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">$ docker service ps redis</span><br><span class="line">ID                         NAME     IMAGE        NODE     DESIRED STATE  CURRENT STATE           ERROR</span><br><span class="line">27mlfg8pqlvz9w4yky1q9fxm7  redis.1  redis:3.0.6  worker1  Running        Running 18 minutes ago</span><br><span class="line">ejlctv6j92caxapd7g2bll0bo  redis.2  redis:3.0.6  manager  Running        Running 2 minutes ago</span><br><span class="line">3l0nu4zt99kecwig1sfie1km9  redis.3  redis:3.0.6  worker2  Running        Running 11 minutes ago</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>如果想看各个 redis 实例的启动日志，你可以 <strong>docker ps</strong> 拿到容器 ID，然后 <strong>docker logs CONTAINER_ID</strong> 看到 redis 的启动日志。<br>如果想知道在最后一个实例启动之前 16 分钟内三个实例发生了什么事情，你需要 <strong>docker-machine ssh NODE_NAME</strong> ，看 &#x2F;var&#x2F;log&#x2F;docker.log 中的内容。</p>
+</blockquote>
+<p>接下来，我们更新 redis 实例到 3.0.7</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ docker service update --image redis:3.0.7 redis</span><br><span class="line">redis</span><br></pre></td></tr></table></figure>
+
+<p>因为之前已经在各个节点更新过 3.0.7 镜像，省略了下载新镜像的过程，所以这次更新在 2 分钟之内全部完成。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">$ docker service ps redis</span><br><span class="line">ID                         NAME         IMAGE        NODE     DESIRED STATE  CURRENT STATE                ERROR</span><br><span class="line">cf3stbcfz3zdmw5mgogya6amd  redis.1      redis:3.0.7  manager  Running        Running 2 minutes ago</span><br><span class="line">27mlfg8pqlvz9w4yky1q9fxm7   \_ redis.1  redis:3.0.6  worker1  Shutdown       Shutdown 2 minutes ago</span><br><span class="line">ewv52c73p0klbx6hmofxm72ti  redis.2      redis:3.0.7  worker2  Running        Running about a minute ago</span><br><span class="line">ejlctv6j92caxapd7g2bll0bo   \_ redis.2  redis:3.0.6  manager  Shutdown       Shutdown about a minute ago</span><br><span class="line">4rcaexit4kupwcjrxdnjftgln  redis.3      redis:3.0.7  worker1  Running        Running about a minute ago</span><br><span class="line">3l0nu4zt99kecwig1sfie1km9   \_ redis.3  redis:3.0.6  worker2  Shutdown       Shutdown about a minute ago</span><br></pre></td></tr></table></figure>
+
+<h2 id="拉掉节点"><a href="#拉掉节点" class="headerlink" title="拉掉节点"></a>拉掉节点</h2><p>有时，比如计划维护时间，您需要将节点设置为不可用。 <strong>DRAIN</strong> 可用性防止节点从 swarm 管理器接收新任务。<br>它还意味着管理器停止在节点上运行的任务，并在具有 <strong>ACTIVE</strong> 可用性的节点上启动副本任务。</p>
+<p>拉掉 worker1 节点</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ docker node update --availability drain worker1</span><br><span class="line">worker1</span><br></pre></td></tr></table></figure>
+
+<p>这时看到 worker1 节点已经 Shutdown，并且在 worker2 上启动了一个新的 redis 实例。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">$ docker service ps redis</span><br><span class="line">ID                         NAME         IMAGE        NODE     DESIRED STATE  CURRENT STATE            ERROR</span><br><span class="line">cf3stbcfz3zdmw5mgogya6amd  redis.1      redis:3.0.7  manager  Running        Running 13 minutes ago</span><br><span class="line">27mlfg8pqlvz9w4yky1q9fxm7   \_ redis.1  redis:3.0.6  worker1  Shutdown       Shutdown 13 minutes ago</span><br><span class="line">ewv52c73p0klbx6hmofxm72ti  redis.2      redis:3.0.7  worker2  Running        Running 12 minutes ago</span><br><span class="line">ejlctv6j92caxapd7g2bll0bo   \_ redis.2  redis:3.0.6  manager  Shutdown       Shutdown 12 minutes ago</span><br><span class="line">80zf0ykluvhhmydro7egm04iu  redis.3      redis:3.0.7  worker2  Running        Running 17 seconds ago</span><br><span class="line">4rcaexit4kupwcjrxdnjftgln   \_ redis.3  redis:3.0.7  worker1  Shutdown       Shutdown 35 seconds ago</span><br><span class="line">3l0nu4zt99kecwig1sfie1km9   \_ redis.3  redis:3.0.6  worker2  Shutdown       Shutdown 13 minutes ago</span><br></pre></td></tr></table></figure>
+
+<p>恢复 worker1 节点</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ docker node update --availability active worker1</span><br><span class="line">worker1</span><br></pre></td></tr></table></figure>
+
+<p>查看 worker1 节点状态已经 Active</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">$ docker node inspect --pretty worker1</span><br><span class="line">ID:			beh2b7riuqv7oz5nhbhuvmr0t</span><br><span class="line">Hostname:		worker1</span><br><span class="line">Joined at:		2016-11-30 09:29:10.681020915 +0000 utc</span><br><span class="line">Status:</span><br><span class="line"> State:			Ready</span><br><span class="line"> Availability:		Active</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+
+<p>现在 worker1 可以接收新的任务了。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ docker service scale redis=5</span><br><span class="line">redis scaled to 5</span><br></pre></td></tr></table></figure>
+
+<p>可以看到在 worker1 上启动了 2 个新的 redis 实例</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">$ docker service ps redis</span><br><span class="line">ID                         NAME         IMAGE        NODE     DESIRED STATE  CURRENT STATE            ERROR</span><br><span class="line">cf3stbcfz3zdmw5mgogya6amd  redis.1      redis:3.0.7  manager  Running        Running 20 minutes ago</span><br><span class="line">27mlfg8pqlvz9w4yky1q9fxm7   \_ redis.1  redis:3.0.6  worker1  Shutdown       Shutdown 20 minutes ago</span><br><span class="line">ewv52c73p0klbx6hmofxm72ti  redis.2      redis:3.0.7  worker2  Running        Running 19 minutes ago</span><br><span class="line">ejlctv6j92caxapd7g2bll0bo   \_ redis.2  redis:3.0.6  manager  Shutdown       Shutdown 19 minutes ago</span><br><span class="line">80zf0ykluvhhmydro7egm04iu  redis.3      redis:3.0.7  worker2  Running        Running 7 minutes ago</span><br><span class="line">4rcaexit4kupwcjrxdnjftgln   \_ redis.3  redis:3.0.7  worker1  Shutdown       Shutdown 7 minutes ago</span><br><span class="line">3l0nu4zt99kecwig1sfie1km9   \_ redis.3  redis:3.0.6  worker2  Shutdown       Shutdown 20 minutes ago</span><br><span class="line">79dffeo1l7etwc731b5lgrgac  redis.4      redis:3.0.7  worker1  Running        Running 12 seconds ago</span><br><span class="line">5eyb4lhp16m9n2ob2bkifpeqw  redis.5      redis:3.0.7  worker1  Running        Running 12 seconds ago</span><br></pre></td></tr></table></figure>
+
+
+<h2 id="路由网络-routing-mesh"><a href="#路由网络-routing-mesh" class="headerlink" title="路由网络 routing mesh"></a>路由网络 routing mesh</h2><p>Docker Swarm Mode 可以发布服务端口，使其可用于群外的资源。<br>所有节点都加入路由网络，路由网络使得每个节点都能够接受已发布端口上的连接，即使节点上没有任何服务正在运行。<br>路由网络将所有传入的请求路由到正在运行服务的节点上。</p>
+<p>为了在群中使用入口网络，您需要在群集节点之间打开以下端口：</p>
+<ul>
+<li>Port 7946 TCP&#x2F;UDP</li>
+<li>Port 4789 UDP</li>
+</ul>
+<h3 id="发布一个对外端口"><a href="#发布一个对外端口" class="headerlink" title="发布一个对外端口"></a>发布一个对外端口</h3><p>发布端口使用以下命令</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">$ docker service create \</span><br><span class="line">  --name &lt;SERVICE-NAME&gt; \</span><br><span class="line">  --publish &lt;PUBLISHED-PORT&gt;:&lt;TARGET-PORT&gt; \</span><br><span class="line">  &lt;IMAGE&gt;</span><br></pre></td></tr></table></figure>
+
+<p>这里以 nginx 为例，为了演示，这里只用了 2 个 nginx 实例</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">$ docker service create \</span><br><span class="line">  --name my-web \</span><br><span class="line">  --publish 8080:80 \</span><br><span class="line">  --replicas 2 \</span><br><span class="line">  nginx</span><br><span class="line">d3192apcq7hharl4kpzl0eqqg</span><br></pre></td></tr></table></figure>
+
+<p>确认服务已经启动</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">$ docker service ps my-web</span><br><span class="line">ID                         NAME      IMAGE  NODE     DESIRED STATE  CURRENT STATE               ERROR</span><br><span class="line">a90s5hnb58dck8cxny4k2xgdk  my-web.1  nginx  worker1  Running        Running 2 minutes ago</span><br><span class="line">2148yi9va70eu27xl6nfi9une  my-web.2  nginx  worker2  Running        Running about a minute ago</span><br></pre></td></tr></table></figure>
+
+<p>这时我们分别访问三个节点，都可以看到 nginx 首页。</p>
+<ul>
+<li><a href="http://192.168.99.101:8080/">http://192.168.99.101:8080</a></li>
+<li><a href="http://192.168.99.102:8080/">http://192.168.99.102:8080</a></li>
+<li><a href="http://192.168.99.103:8080/">http://192.168.99.103:8080</a></li>
+</ul>
+<p>架构如下（官方图）<br><img src="/images/ingress-routing-mesh.png"></p>
+<p>如果你要发布一个新的端口</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ docker service update \</span><br><span class="line">  --publish-add &lt;PUBLISHED-PORT&gt;:&lt;TARGET-PORT&gt; \</span><br><span class="line">  my-web</span><br></pre></td></tr></table></figure>
+
+<h3 id="配置一个负载均衡器"><a href="#配置一个负载均衡器" class="headerlink" title="配置一个负载均衡器"></a>配置一个负载均衡器</h3><p>前边实现了节点中 service 的负载均衡。<br>我们可以在 Swarm Load Balance 之前再加一层负载均衡器，实现节点之间的负载均衡。<br>具体的实现这里就不再描述，可以自己编写 haproxy.cfg 和 Dockerfile 构建 Docker HAProxy 镜像。</p>
+<p>架构如下（官方图）<br><img src="/images/ingress-lb.png"></p>
+<p>-EOF-</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="followme">
+  <span>Welcome to my other publishing channels</span>
+
+  <div class="social-list">
+
+      <div class="social-item">
+          <a target="_blank" class="social-link" href="/atom.xml">
+            <span class="icon">
+              <i class="fa fa-rss"></i>
+            </span>
+
+            <span class="label">RSS</span>
+          </a>
+      </div>
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/linux/" rel="tag"># linux</a>
+              <a href="/tags/docker/" rel="tag"># docker</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2016/12/01/docker-four-docker-compose/" rel="prev" title="Docker 实战（四）：Docker Compose">
+                  <i class="fa fa-angle-left"></i> Docker 实战（四）：Docker Compose
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2016/12/09/docker-six-docker-compose-cluster/" rel="next" title="Docker 实战（六）：使用 Docker Compose 搭建 Web 集群">
+                  Docker 实战（六）：使用 Docker Compose 搭建 Web 集群 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2024</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">巴蒂</span>
+  </div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="Total Visitors">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="Total Views">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/pisces/" rel="noopener" target="_blank">NexT.Pisces</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="Back to top">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pangu/4.0.7/pangu.min.js" integrity="sha256-j+yj56cdEY2CwkVtGyz18fNybFGpMGJ8JxG3GSyO2+I=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/sidebar.js"></script><script src="/js/next-boot.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.4.1/search.js" integrity="sha256-1kfA5uHPf65M5cphT2dvymhkuyHPQp5A53EGZOnOLmc=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+
+
+
+
+  
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+
+</body>
+</html>
